@@ -53,7 +53,7 @@ static struct msm_actuator *actuators[] = {
 	&msm_bivcm_actuator_table,
 };
 
-#if defined(CONFIG_MACH_SONY_HOUOU)
+#if defined(CONFIG_SONY_CAM_EXT)
 static struct class *hall_pos_class;
 static int hall_pos_class_created;
 
@@ -2245,7 +2245,7 @@ static int32_t msm_actuator_platform_probe(struct platform_device *pdev)
 #endif
 		msm_actuator_register_hall_device(msm_actuator_t, pdev->id);
 
-#if defined(CONFIG_MACH_SONY_HOUOU)
+#if defined(CONFIG_SONY_CAM_EXT)
 	msm_actuator_register_hall_pos_device(msm_actuator_t, pdev->id);
 #endif
 
