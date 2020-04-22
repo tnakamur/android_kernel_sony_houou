@@ -117,15 +117,6 @@ config ARCH_SONY_GANGES
     If you enable this config,
     please use SONY Mobile device tree.
 
-config MACH_SONY_PIONEER
-    bool "Sony Mobile Pioneer"
-    depends on ARCH_SONY_GANGES
-    help
-    Support for the SONY Mobile Pioneer device
-    which is based on SONY Ganges platform.
-    If you enable this config,
-    please use SONY Mobile device tree.
-
 config MACH_SONY_HOUOU
     bool "Sony Mobile Houou"
     depends on ARCH_SONY_GANGES
@@ -135,38 +126,11 @@ config MACH_SONY_HOUOU
     If you enable this config,
     please use SONY Mobile device tree.
 
-config MACH_SONY_KIRIN
-    bool "Sony Mobile Kirin"
+config MACH_SONY_HOUOU_ROLA
+    bool "Sony Mobile Houou Rola"
     depends on ARCH_SONY_GANGES
     help
-    Support for the SONY Mobile Kirin device
-    which is based on SONY Ganges platform.
-    If you enable this config,
-    please use SONY Mobile device tree.
-
-config MACH_SONY_KIRIN_DSDS
-    bool "Sony Mobile Kirin Dsds"
-    depends on ARCH_SONY_GANGES
-    help
-    Support for the SONY Mobile Kirin DS device
-    which is based on SONY Ganges platform.
-    If you enable this config,
-    please use SONY Mobile device tree.
-
-config MACH_SONY_MERMAID
-    bool "Sony Mobile Mermaid"
-    depends on ARCH_SONY_GANGES
-    help
-    Support for the SONY Mobile Mermaid device
-    which is based on SONY Ganges platform.
-    If you enable this config,
-    please use SONY Mobile device tree.
-
-config MACH_SONY_MERMAID_DSDS
-    bool "Sony Mobile Mermaid Dsds"
-    depends on ARCH_SONY_GANGES
-    help
-    Support for the SONY Mobile Mermaid DS device
+    Support for the SONY Mobile Houou Rola device
     which is based on SONY Ganges platform.
     If you enable this config,
     please use SONY Mobile device tree.

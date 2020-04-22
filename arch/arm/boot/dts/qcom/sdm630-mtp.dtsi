@@ -14,8 +14,12 @@
  * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
  * and licensed under the license of the file.
  */
+/*
+ * NOTE: This file has been modified by Sony Mobile Communications Inc.
+ * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
+ * and licensed under the license of the file.
+ */
 
-#include "sdm660-pinctrl.dtsi"
 /* #include "sdm630-camera-sensor-mtp.dtsi" */
 /*/ {
 	mtp_batterydata: qcom,battery-data {
@@ -170,6 +174,7 @@
 	hw-config = "single_dsi";
 };
 
+/*
 &mdss_dsi0 {
 	qcom,dsi-pref-prim-pan = <&dsi_nt35695b_truly_fhd_video>;
 	pinctrl-names = "mdss_default", "mdss_sleep";
@@ -178,6 +183,7 @@
 	qcom,platform-reset-gpio = <&tlmm 53 0>;
 	qcom,platform-te-gpio = <&tlmm 59 0>;
 };
+*/
 
 &mdss_dp_ctrl {
 	pinctrl-names = "mdss_dp_active", "mdss_dp_sleep";

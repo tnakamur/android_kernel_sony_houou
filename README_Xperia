@@ -1,10 +1,11 @@
 Configuration files can be found in arch/arm64/configs.
 
   defconfig using in common:
-    msmcortex-perf_defconfig
+    sdm660-perf_defconfig
 
   diffconfigs for each product:
     Xperia Ace SO-02L => houou_diffconfig
+    Xperia Ace J3173  => houou_rola_diffconfig
 
 How to build your kernel:
 
@@ -38,7 +39,7 @@ How to build your kernel:
 
     $ make sdm660-perf_defconfig O=./out
 
-    $ make O=./out
+    $ make -j12 O=./out
 
     You can see arch/arm64/boot/Image-dtb if you succeed in building.
 
@@ -47,10 +48,9 @@ How to build your kernel:
     (In the Linux Kernel directory)
     $ mkbootimg \
         --kernel out/arch/arm64/boot/Image.gz-dtb \
-        --ramdisk ramdisk-recovery.img \
-        --cmdline "androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 swiotlb=1 firmware_class.path=/vendor/firmware_mnt/image loop.max_part=7 panic_on_err=1 loop.max_part=7 buildvariant=userdebug veritykeyid=id:7e4333f9bba00adfe0ede979e28ed1920492b40f" \
+        --cmdline "androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 swiotlb=1 firmware_class.path=/vendor/firmware_mnt/image loop.max_part=7 panic_on_err=1 loop.max_part=7 buildvariant=userdebug" \
         --os_version 9 \
-        --os_patch_level 2019-08-01 \
+        --os_patch_level 2019-10-01 \
         --base 0x00000000 \
         --kernel_offset 0x00008000 \
         --ramdisk_offset 0x01000000 \

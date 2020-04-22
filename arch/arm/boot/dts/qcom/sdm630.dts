@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -17,22 +17,12 @@
  * published by the Free Software Foundation.
  */
 
-
 /dts-v1/;
 
-#include "../qcom/sdm630.dtsi"
-#include "../qcom/sdm630-mtp.dtsi"
-#include "../qcom/sdm660-internal-codec.dtsi"
-#include "sdm630-ganges-mermaid.dtsi"
+#include "sdm630.dtsi"
 
 / {
-	model = "Sony Mobile Communications. mermaid(sdm630)";
-	compatible = "somc,mermaid-row", "qcom,sdm630-mtp", "qcom,sdm630", "qcom,mtp";
-	qcom,board-id = <8 1>;
-	qcom,pmic-id = <0x0001001b 0x0101011a 0x0 0x0>,
-			<0x0001001b 0x0201011a 0x0 0x0>;
-};
-
-&int_codec {
-	qcom,model = "sdm660-snd-card-mtp";
+	model = "Qualcomm Technologies, Inc. SDM 630 v1 SoC";
+	compatible = "qcom,sdm630";
+	qcom,board-id = <8 0>;
 };

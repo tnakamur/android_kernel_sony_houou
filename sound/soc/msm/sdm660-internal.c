@@ -3102,6 +3102,12 @@ static void msm_int_dt_parse_cap_info(struct platform_device *pdev,
 	pdata->micbias2_cap_mode =
 		(of_property_read_bool(pdev->dev.of_node, ext2_cap) ?
 		 MICBIAS_EXT_BYP_CAP : MICBIAS_NO_EXT_BYP_CAP);
+
+#ifdef CONFIG_MICBIAS2_NO_EXT_BYP_CAP
+	dev_dbg(&pdev->dev, "%s: Ignore the property (%s)\n",
+			__func__, ext2_cap);
+	pdata->micbias2_cap_mode = MICBIAS_NO_EXT_BYP_CAP;
+#endif
 }
 
 static struct snd_soc_card *msm_int_populate_sndcard_dailinks(

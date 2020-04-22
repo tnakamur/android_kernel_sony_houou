@@ -36,12 +36,6 @@
 		pinctrl-2 = <>;
 	};
 
-	mdss_dsi: qcom,mdss_dsi@0 {
-		mdss_dsi0: qcom,mdss_dsi_ctrl0@c994000 {
-			vddio-supply = <&pm660_l11>;
-		};
-	};
-
 	dsi_panel_pwr_supply_full_incell: dsi_panel_pwr_supply_full_incell {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -115,60 +109,12 @@
 		};
 	};
 
-	int_codec: sound {
-		qcom,msm-micbias1-ext-cap;
-		qcom,msm-micbias2-ext-cap = "false";
-		qcom,msm-hs-micbias-type = "internal";
-		qcom,audio-routing =
-			"RX_BIAS", "INT_MCLK0",
-			"SPK_RX_BIAS", "INT_MCLK0",
-			"INT_LDO_H", "INT_MCLK0",
-			"RX_I2S_CLK", "INT_MCLK0",
-			"TX_I2S_CLK", "INT_MCLK0",
-			"MIC BIAS External", "Handset Mic",
-			"MIC BIAS Internal2", "Headset Mic",
-			"MIC BIAS External", "Secondary Mic",
-			"AMIC1", "MIC BIAS External",
-			"AMIC2", "MIC BIAS Internal2",
-			"AMIC3", "MIC BIAS External",
-			"DMIC1", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic1",
-			"DMIC2", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic2",
-			"DMIC3", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic3",
-			"DMIC4", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic4",
-			"SpkrLeft IN", "SPK1 OUT",
-			"SpkrRight IN", "SPK2 OUT",
-			"PDM_IN_RX1", "PDM_OUT_RX1",
-			"PDM_IN_RX2", "PDM_OUT_RX2",
-			"PDM_IN_RX3", "PDM_OUT_RX3",
-			"ADC1_IN", "ADC1_OUT",
-			"ADC2_IN", "ADC2_OUT",
-			"ADC3_IN", "ADC3_OUT";
-
-		qcom,wsa-max-devs = <1>;
-		qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrLeft",
-					  "SpkrLeft", "SpkrLeft";
-	};
-
-	sim_detect {
-		compatible = "sim-detect";
-
-		sim1_det {
-			label = "sim-detection";
-			gpios = <&tlmm 90 0x0>;
-			debounce-interval = <10>;
-		};
-	};
 	qcom,wdt@17980000 {
 		qcom,bark-time = <12000>;
 	};
 
 	gpio_keys {
-		/delete-node/vol_up;
-		vol_down {
+		vol_up { // Cannot delete vol_up node in dtb from dtbo, so use override instead
 			label = "volume_down";
 			gpios = <&pm660l_gpios 7 0x1>;
 			linux,input-type = <1>;
@@ -188,20 +134,65 @@
 		};
 	};
 
-	qusb_phy0: qusb@c012000 {
-		qcom,tune2-efuse-correction = <4>;
-		qcom,qusb-phy-init-seq = <0xf8 0x80
-			0xd3 0x84
-			0x83 0x88
-			0xc7 0x8c
-			0x03 0x90
-			0x30 0x08
-			0x79 0x0c
-			0x21 0x10
-			0x14 0x9c
-			0x9f 0x1c
-			0x00 0x18>;
+};
+
+&mdss_dsi {
+	mdss_dsi0: qcom,mdss_dsi_ctrl0@c994000 {
+		vddio-supply = <&pm660_l11>;
 	};
+};
+
+&int_codec {
+	qcom,msm-micbias1-ext-cap;
+	qcom,msm-micbias2-ext-cap = "false";
+	qcom,msm-hs-micbias-type = "internal";
+	qcom,audio-routing =
+		"RX_BIAS", "INT_MCLK0",
+		"SPK_RX_BIAS", "INT_MCLK0",
+		"INT_LDO_H", "INT_MCLK0",
+		"RX_I2S_CLK", "INT_MCLK0",
+		"TX_I2S_CLK", "INT_MCLK0",
+		"MIC BIAS External", "Handset Mic",
+		"MIC BIAS Internal2", "Headset Mic",
+		"MIC BIAS External", "Secondary Mic",
+		"AMIC1", "MIC BIAS External",
+		"AMIC2", "MIC BIAS Internal2",
+		"AMIC3", "MIC BIAS External",
+		"DMIC1", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic1",
+		"DMIC2", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic2",
+		"DMIC3", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic3",
+		"DMIC4", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic4",
+		"SpkrLeft IN", "SPK1 OUT",
+		"SpkrRight IN", "SPK2 OUT",
+		"PDM_IN_RX1", "PDM_OUT_RX1",
+		"PDM_IN_RX2", "PDM_OUT_RX2",
+		"PDM_IN_RX3", "PDM_OUT_RX3",
+		"ADC1_IN", "ADC1_OUT",
+		"ADC2_IN", "ADC2_OUT",
+		"ADC3_IN", "ADC3_OUT";
+
+	qcom,wsa-max-devs = <1>;
+	qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrLeft",
+				  "SpkrLeft", "SpkrLeft";
+};
+
+&qusb_phy0 {
+	qcom,tune2-efuse-correction = <4>;
+	qcom,qusb-phy-init-seq = <0xf8 0x80
+		0xd3 0x84
+		0x83 0x88
+		0xc7 0x8c
+		0x03 0x90
+		0x30 0x08
+		0x79 0x0c
+		0x21 0x10
+		0x14 0x9c
+		0x9f 0x1c
+		0x00 0x18>;
 };
 
 &pm660l_wled {

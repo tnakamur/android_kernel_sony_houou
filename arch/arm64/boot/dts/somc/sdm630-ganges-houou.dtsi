@@ -29,61 +29,6 @@
 		disabled-pins = <8 9 10 11>;
 	};
 
-	somc_pinctrl: somc_pinctrl {
-		/* If product common default setting is needed,
-		fill pinctrl-1 value in <product>_common.dtsi */
-		pinctrl-1 = <&sdm_gpio_12 &sdm_gpio_13 &sdm_gpio_14 &sdm_gpio_15 &sdm_gpio_20
-			    &sdm_gpio_21 &sdm_gpio_28 &sdm_gpio_29 &sdm_gpio_30 &sdm_gpio_31
-			    &sdm_gpio_34 &sdm_gpio_35 &sdm_gpio_40 &sdm_gpio_41 &sdm_gpio_42 &sdm_gpio_43
-			    &sdm_gpio_44 &sdm_gpio_45 &sdm_gpio_46 &sdm_gpio_47 &sdm_gpio_49
-			    &sdm_gpio_50 &sdm_gpio_51 &sdm_gpio_52 &sdm_gpio_56 &sdm_gpio_60
-			    &sdm_gpio_61 &sdm_gpio_62 &sdm_gpio_63 &sdm_gpio_64 &sdm_gpio_65 &sdm_gpio_66
-			    &sdm_gpio_67 &sdm_gpio_70 &sdm_gpio_72 &sdm_gpio_74 &sdm_gpio_75 &sdm_gpio_79
-			    &sdm_gpio_83 &sdm_gpio_84 &sdm_gpio_85 &sdm_gpio_86 &sdm_gpio_92
-			    &sdm_gpio_93 &sdm_gpio_94 &sdm_gpio_95 &sdm_gpio_97 &sdm_gpio_98
-			    &sdm_gpio_103 &sdm_gpio_104 &sdm_gpio_109 &sdm_gpio_110 &sdm_gpio_113>;
-	};
-
-	int_codec: sound {
-		qcom,msm-micbias1-ext-cap;
-		/delete-property/ qcom,msm-micbias2-ext-cap;
-		qcom,msm-hs-micbias-type = "external";
-		qcom,audio-routing =
-			"RX_BIAS", "INT_MCLK0",
-			"SPK_RX_BIAS", "INT_MCLK0",
-			"INT_LDO_H", "INT_MCLK0",
-			"RX_I2S_CLK", "INT_MCLK0",
-			"TX_I2S_CLK", "INT_MCLK0",
-			"MIC BIAS External", "Handset Mic",
-			"MIC BIAS External2", "Headset Mic",
-			"MIC BIAS External", "Secondary Mic",
-			"AMIC1", "MIC BIAS External",
-			"AMIC2", "MIC BIAS External2",
-			"AMIC3", "MIC BIAS External",
-			"DMIC1", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic1",
-			"DMIC2", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic2",
-			"DMIC3", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic3",
-			"DMIC4", "MIC BIAS External",
-			"MIC BIAS External", "Digital Mic4",
-			"SpkrLeft IN", "SPK1 OUT",
-			"SpkrRight IN", "SPK2 OUT",
-			"PDM_IN_RX1", "PDM_OUT_RX1",
-			"PDM_IN_RX2", "PDM_OUT_RX2",
-			"PDM_IN_RX3", "PDM_OUT_RX3",
-			"ADC1_IN", "ADC1_OUT",
-			"ADC2_IN", "ADC2_OUT",
-			"ADC3_IN", "ADC3_OUT";
-
-		qcom,wsa-max-devs = <2>;
-		qcom,wsa-devs = <&wsa881x_211_en>, <&wsa881x_212_en>,
-				<&wsa881x_213_en>, <&wsa881x_214_en>;
-		qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
-					  "SpkrLeft", "SpkrRight";
-	};
-
 	bu520x1nvx {
 		compatible = "rohm,bu520x1nvx";
 
@@ -200,19 +145,76 @@
 		qcom,switch-source = <&pm660l_switch0>;
 		status = "ok";
 	};
-	qusb_phy0: qusb@c012000 {
-			qcom,tune2-efuse-correction = <0>;
-			qcom,qusb-phy-init-seq = <0xf8 0x80
-					0xd3 0x84
-					0x83 0x88
-					0xc7 0x8c
-					0x30 0x08
-					0x79 0x0c
-					0x21 0x10
-					0x14 0x9c
-					0x9f 0x1c
-					0x00 0x18>;
-	};
+};
+
+&somc_pinctrl {
+	/* If product common default setting is needed,
+	fill pinctrl-1 value in <product>_common.dtsi */
+	pinctrl-1 = <&sdm_gpio_12 &sdm_gpio_13 &sdm_gpio_14 &sdm_gpio_15 &sdm_gpio_20
+		    &sdm_gpio_21 &sdm_gpio_28 &sdm_gpio_29 &sdm_gpio_30 &sdm_gpio_31
+		    &sdm_gpio_34 &sdm_gpio_35 &sdm_gpio_40 &sdm_gpio_41 &sdm_gpio_42 &sdm_gpio_43
+		    &sdm_gpio_44 &sdm_gpio_45 &sdm_gpio_46 &sdm_gpio_47 &sdm_gpio_49
+		    &sdm_gpio_50 &sdm_gpio_51 &sdm_gpio_52 &sdm_gpio_56 &sdm_gpio_60
+		    &sdm_gpio_61 &sdm_gpio_62 &sdm_gpio_63 &sdm_gpio_64 &sdm_gpio_65 &sdm_gpio_66
+		    &sdm_gpio_67 &sdm_gpio_70 &sdm_gpio_72 &sdm_gpio_74 &sdm_gpio_75 &sdm_gpio_79
+		    &sdm_gpio_83 &sdm_gpio_84 &sdm_gpio_85 &sdm_gpio_86 &sdm_gpio_92
+		    &sdm_gpio_93 &sdm_gpio_94 &sdm_gpio_95 &sdm_gpio_97 &sdm_gpio_98
+		    &sdm_gpio_103 &sdm_gpio_104 &sdm_gpio_109 &sdm_gpio_110 &sdm_gpio_113>;
+};
+
+&int_codec {
+	qcom,msm-micbias1-ext-cap;
+	/delete-property/ qcom,msm-micbias2-ext-cap;
+	qcom,msm-hs-micbias-type = "external";
+	qcom,audio-routing =
+		"RX_BIAS", "INT_MCLK0",
+		"SPK_RX_BIAS", "INT_MCLK0",
+		"INT_LDO_H", "INT_MCLK0",
+		"RX_I2S_CLK", "INT_MCLK0",
+		"TX_I2S_CLK", "INT_MCLK0",
+		"MIC BIAS External", "Handset Mic",
+		"MIC BIAS External2", "Headset Mic",
+		"MIC BIAS External", "Secondary Mic",
+		"AMIC1", "MIC BIAS External",
+		"AMIC2", "MIC BIAS External2",
+		"AMIC3", "MIC BIAS External",
+		"DMIC1", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic1",
+		"DMIC2", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic2",
+		"DMIC3", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic3",
+		"DMIC4", "MIC BIAS External",
+		"MIC BIAS External", "Digital Mic4",
+		"SpkrLeft IN", "SPK1 OUT",
+		"SpkrRight IN", "SPK2 OUT",
+		"PDM_IN_RX1", "PDM_OUT_RX1",
+		"PDM_IN_RX2", "PDM_OUT_RX2",
+		"PDM_IN_RX3", "PDM_OUT_RX3",
+		"ADC1_IN", "ADC1_OUT",
+		"ADC2_IN", "ADC2_OUT",
+		"ADC3_IN", "ADC3_OUT";
+
+	qcom,wsa-max-devs = <2>;
+	qcom,wsa-devs = <&wsa881x_211_en>, <&wsa881x_212_en>,
+			<&wsa881x_213_en>, <&wsa881x_214_en>;
+	qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
+				  "SpkrLeft", "SpkrRight";
+};
+
+&qusb_phy0 {
+	qcom,tune2-efuse-correction = <0>;
+	qcom,qusb-phy-init-seq = <0xf8 0x80
+			0xd3 0x84
+			0x83 0x88
+			0xc7 0x8c
+			0x03 0x90
+			0x30 0x08
+			0x79 0x0c
+			0x21 0x10
+			0x14 0x9c
+			0x9f 0x1c
+			0x00 0x18>;
 };
 
 &pm660_gpios {
@@ -249,33 +251,32 @@
 
 &red_led {
 	somc,color_variation_max_num = <5>;
-	/* color code, single color, mixed color */
 	somc,max_current = <
-		83 305 179
-		84 69 72
-		85 93 85
-		86 69 72
-		87 93 85>;
+		83 374 298
+		84 106 104
+		85 126 114
+		86 106 104
+		87 126 114>;
 };
 
 &green_led {
 	somc,color_variation_max_num = <5>;
 	somc,max_current = <
-		83 381 448
-		84 142 291
-		85 188 353
-		86 142 291
-		87 188 353>;
+		83 398 488
+		84 146 264
+		85 180 286
+		86 146 264
+		87 180 286>;
 };
 
 &blue_led {
 	somc,color_variation_max_num = <5>;
 	somc,max_current = <
-		83 510 159
-		84 339 97
-		85 450 127
-		86 339 97
-		87 450 127>;
+		83 510 246
+		84 272 90
+		85 406 106
+		86 272 90
+		87 406 106>;
 };
 
 &pm660l_gpios {

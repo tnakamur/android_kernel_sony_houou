@@ -307,6 +307,11 @@
 	firmware: firmware {
 		android {
 			compatible = "android,firmware";
+			vbmeta {
+				compatible = "android,vbmeta";
+				parts = "vbmeta,boot,system,vendor,dtbo,rdimage";
+			};
+
 			fstab {
 				compatible = "android,fstab";
 				vendor {
@@ -314,7 +319,7 @@
 					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,slotselect,verify";
+					fsmgr_flags = "wait,slotselect,avb";
 					status = "ok";
 				};
 			};
@@ -2201,6 +2206,7 @@
 #include "sdm630-gpu.dtsi"
 #include "sdm630-camera.dtsi"
 #include "sdm630-pm.dtsi"
+#include "sdm660-pinctrl.dtsi"
 #include "sdm660-vidc.dtsi"
 #include "sdm630-mdss.dtsi"
 #include "sdm630-mdss-pll.dtsi"

@@ -5,3 +5,10 @@ config QCOM_MDSS_PLL
 	It provides support for DSI, eDP and HDMI interface pll programming on MDSS
 	hardware. It also handles the pll specific resources and turn them on/off when
 	mdss pll client tries to enable/disable pll clocks.
+
+config DSI_PLL_SSC_DISABLE_OVERLAY
+	bool "Disable DSI pll ssc"
+	default n
+	---help---
+	"qcom,dsi-pll-ssc-en" property is set in SoC dts, but it can not be deleted in
+	dts overlay, using this config to disable dsi pll ssc.
