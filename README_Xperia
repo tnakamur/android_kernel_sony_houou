@@ -4,8 +4,8 @@ Configuration files can be found in arch/arm64/configs.
     sdm660-perf_defconfig
 
   diffconfigs for each product:
-    Xperia Ace SO-02L => houou_diffconfig
-    Xperia Ace J3173  => houou_rola_diffconfig
+    Xperia Ace      => houou_diffconfig
+
 
 How to build your kernel:
 
@@ -37,24 +37,23 @@ How to build your kernel:
     $ export KBUILD_DIFFCONFIG=houou_diffconfig
       NOTE: Please set a configuration file you want to build.
 
-    $ make sdm660-perf_defconfig O=./out
+    $ make sdm660-perf_defconfig O=./out ARCH=arm64
 
-    $ make -j12 O=./out
+    $ make O=./out
 
-    You can see arch/arm64/boot/Image-dtb if you succeed in building.
+    You can see arch/arm64/boot/Image.gz-dtb if you succeed in building.
 
 
   Step 2: Assembling the boot.img
     (In the Linux Kernel directory)
     $ mkbootimg \
-        --kernel out/arch/arm64/boot/Image.gz-dtb \
-        --cmdline "androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 swiotlb=1 firmware_class.path=/vendor/firmware_mnt/image loop.max_part=7 panic_on_err=1 loop.max_part=7 buildvariant=userdebug" \
-        --os_version 9 \
-        --os_patch_level 2019-10-01 \
-        --base 0x00000000 \
-        --kernel_offset 0x00008000 \
-        --ramdisk_offset 0x01000000 \
-        --tags_offset 0x00000100 \
-        --pagesize 4096 \
-        -o boot.img
+      --kernel out/arch/arm64/boot/Image.gz-dtb \
+      --ramdisk ramdisk-recovery.img \
+      --cmdline "androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 swiotlb=1 firmware_class.path=/vendor/firmware_mnt/image loop.max_part=7 panic_on_err=1 loop.max_part=7 buildvariant=userdebug veritykeyid=id:7e4333f9bba00adfe0ede979e28ed1920492b40f" \
+      --base 0x00000000 \
+      --pagesize 4096 \
+      --os_version 10 \
+      --os_patch_level 2020-03-01 \
+      --header_version 1 \
+      --output boot.img
 

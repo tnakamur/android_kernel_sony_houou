@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -993,6 +993,8 @@ static long msm_isp_ioctl_unlocked(struct v4l2_subdev *sd,
 		if (arg) {
 			enum msm_vfe_input_src frame_src =
 				*((enum msm_vfe_input_src *)arg);
+			trace_printk("%s: vfe%d VIDIOC_MSM_ISP_REG_UPDATE_CMD",
+				__func__,vfe_dev->pdev->id);
 			vfe_dev->hw_info->vfe_ops.core_ops.
 				reg_update(vfe_dev, frame_src);
 		}
@@ -2095,6 +2097,21 @@ static void msm_isp_enqueue_tasklet_cmd(struct vfe_device *vfe_dev,
 	} else {
 		atomic_add(1, &vfe_dev->irq_cnt);
 	}
+
+	trace_printk("VFE%d frmid: %d [%s] [%s] [%s] [%s] [%s] irq0: 0x%x irq1: 0x%x\n",
+		vfe_dev->pdev->id,
+		vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id,
+		(irq_status0 & (1 << 0))?"SOF":"",
+		(irq_status0 & (1 << 2))?"EPOCH1":"",
+		(irq_status0 & (1 << 4))?"REGUPDATE":"",
+		(irq_status0 & (1 << 3))?"EPOCH2":"",
+		(irq_status0 & (1 << 1))?"EOF":"",
+		irq_status0, irq_status1);
+
+	atomic_add(1, &vfe_dev->irq_cnt);
+	trace_msm_cam_isp_status_dump("VFE_IRQ:", vfe_dev->pdev->id,
+		vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id,
+		irq_status0, irq_status1);
 	queue_cmd->vfeInterruptStatus0 = irq_status0;
 	queue_cmd->vfeInterruptStatus1 = irq_status1;
 	queue_cmd->vfe_pingpong_status = ping_pong_status;
@@ -2194,6 +2211,9 @@ void msm_isp_do_tasklet(unsigned long data)
 		atomic_sub(1, &vfe_dev->irq_cnt);
 		msm_isp_prepare_tasklet_debug_info(vfe_dev,
 			irq_status0, irq_status1, ts);
+		trace_msm_cam_isp_status_dump("VFE_TASKLET:", vfe_dev->pdev->id,
+			vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id,
+			irq_status0, irq_status1);
 		irq_ops = &vfe_dev->hw_info->vfe_ops.irq_ops;
 		irq_ops->process_reset_irq(vfe_dev,
 			irq_status0, irq_status1);
@@ -2218,6 +2238,8 @@ void msm_isp_do_tasklet(unsigned long data)
 			irq_status0, irq_status1, &ts);
 		irq_ops->process_epoch_irq(vfe_dev,
 			irq_status0, irq_status1, &ts);
+		trace_printk("END: vfeid: %d irq_status0: 0x%x irq_status1: 0x%x\n",
+			vfe_dev->pdev->id, irq_status0, irq_status1);
 	}
 }
 
@@ -2296,7 +2318,7 @@ int msm_isp_open_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	vfe_dev->isp_raw0_debug = 0;
 	vfe_dev->isp_raw1_debug = 0;
 	vfe_dev->isp_raw2_debug = 0;
-
+	vfe_dev->irq_sof_id = 0;
 	if (vfe_dev->hw_info->vfe_ops.core_ops.init_hw(vfe_dev) < 0) {
 		pr_err("%s: init hardware failed\n", __func__);
 		vfe_dev->vfe_open_cnt--;

@@ -95,6 +95,6 @@ qcom,send_2729mah {
 		  100  450 4300 4500  800 4380 3
 		  450  550    0 4500  800 4200 4
 		  550 2550    0 4500    0 4200 5
-	>;
-	somc,step-cell-impedance-mohm = <25>;
+    >;
+    somc,step-cell-impedance-mohm = <25>;
 };

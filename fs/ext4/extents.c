@@ -1231,7 +1231,7 @@ static int ext4_ext_split(handle_t *handle, struct inode *inode,
 		}
 		/* zero out unused area in the extent block */
 		ext_size = sizeof(struct ext4_extent_header) +
-			(sizeof(struct ext4_extent) * le16_to_cpu(neh->eh_entries));
+		   (sizeof(struct ext4_extent) * le16_to_cpu(neh->eh_entries));
 		memset(bh->b_data + ext_size, 0,
 			inode->i_sb->s_blocksize - ext_size);
 		ext4_extent_block_csum_set(inode, neh);
@@ -1327,6 +1327,7 @@ static int ext4_ext_grow_indepth(handle_t *handle, struct inode *inode,
 
 	ext_size = sizeof(EXT4_I(inode)->i_data);
 	/* move top-level index/leaf into new block */
+	memset(bh->b_data, 0, bh->b_size);
 	memmove(bh->b_data, EXT4_I(inode)->i_data, ext_size);
 	/* zero out unused area in the extent block */
 	memset(bh->b_data + ext_size, 0, inode->i_sb->s_blocksize - ext_size);

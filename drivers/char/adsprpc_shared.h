@@ -190,17 +190,11 @@ struct fastrpc_ioctl_mmap {
 
 
 struct fastrpc_ioctl_mmap_64 {
-	int fd;					/* ion fd */
+	int fd;				/* ion fd */
 	uint32_t flags;			/* flags for dsp to map with */
 	uint64_t vaddrin;		/* optional virtual address */
 	size_t size;			/* size */
 	uint64_t vaddrout;		/* dsps virtual address */
-};
-
-struct fastrpc_ioctl_perf {			/* kernel performance data */
-	uintptr_t data;
-	uint32_t numkeys;
-	uintptr_t keys;
 };
 
 #define FASTRPC_CONTROL_LATENCY (1)
@@ -226,6 +220,12 @@ struct fastrpc_ioctl_control {
 		struct fastrpc_ctrl_smmu smmu;
 		struct fastrpc_ctrl_kalloc kalloc;
 	};
+};
+
+struct fastrpc_ioctl_perf {			/* kernel performance data */
+	uintptr_t data;
+	uint32_t numkeys;
+	uintptr_t keys;
 };
 
 struct smq_null_invoke {

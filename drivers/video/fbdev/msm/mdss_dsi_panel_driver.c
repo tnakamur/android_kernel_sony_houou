@@ -1022,30 +1022,6 @@ int mdss_dsi_panel_driver_reset_touch(struct mdss_panel_data *pdata, int enable)
 	return rc;
 }
 
-int mdss_dsi_panel_driver_reset_touch_ctrl(struct mdss_panel_data *pdata, bool en)
-{
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
-	struct mdss_panel_specific_pdata *spec_pdata = NULL;
-	int rc = 0;
-
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return -EINVAL;
-	}
-
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-				panel_data);
-
-	spec_pdata = ctrl_pdata->spec_pdata;
-
-	gpio_set_value(spec_pdata->touch_reset_gpio, 0);
-	usleep_range(spec_pdata->off_seq.touch_reset * 1000,
-			spec_pdata->off_seq.touch_reset * 1000);
-	gpio_set_value(spec_pdata->touch_reset_gpio, 1);
-
-	return rc;
-}
-
 static bool mdss_dsi_panel_driver_split_display_enabled(void)
 {
 	/*
@@ -1126,9 +1102,11 @@ int mdss_dsi_panel_driver_parse_dt(struct device_node *np,
 		struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct mdss_panel_specific_pdata *spec_pdata = NULL;
+	struct mdss_panel_info *pinfo = NULL;
 	u32 tmp = 0;
 	int rc = 0;
-	const char *panel_mode;
+	static const char *fps_mode;
+	static const char *fps_type;
 	const char *rst_seq;
 
 	if (ctrl_pdata == NULL) {
@@ -1137,6 +1115,7 @@ int mdss_dsi_panel_driver_parse_dt(struct device_node *np,
 	}
 
 	spec_pdata = ctrl_pdata->spec_pdata;
+	pinfo = &(ctrl_pdata->panel_data.panel_info);
 
 	spec_pdata->pcc_enable = of_property_read_bool(np, "somc,mdss-dsi-pcc-enable");
 	if (spec_pdata->pcc_enable) {
@@ -1390,37 +1369,198 @@ int mdss_dsi_panel_driver_parse_dt(struct device_node *np,
 		"somc,ewu-wait-after-touch-reset", &tmp);
 	spec_pdata->ewu_seq.touch_reset = !rc ? tmp : 0;
 
-	spec_pdata->fps_mode.enable = of_property_read_bool(np,
-					"somc,fps-mode-enable");
-	if (spec_pdata->fps_mode.enable) {
-		panel_mode = of_get_property(np,
-					"somc,fps-mode-panel-mode", NULL);
+	spec_pdata->chg_fps.enable = of_property_read_bool(np,
+					"somc,change-fps-enable");
+	if (spec_pdata->chg_fps.enable) {
 
-		if (!panel_mode) {
+		spec_pdata->input_fpks = pinfo->mipi.frame_rate * 1000;
+		mdss_dsi_parse_dcs_cmds(np, &spec_pdata->fps_cmds,
+					"somc,change-fps-command", NULL);
+
+		rc = of_property_read_u32(np,
+					"somc,driver-ic-vdisp", &tmp);
+		if (rc) {
+			pr_err("%s: Display vdisp not specified\n", __func__);
+			goto error;
+		}
+		spec_pdata->chg_fps.dric_vdisp = tmp;
+
+		fps_type = of_get_property(np,
+					"somc,change-fps-panel-type", NULL);
+		if (!fps_type) {
+			pr_err("%s:%d, Panel type not specified\n",
+							__func__, __LINE__);
+			goto error;
+		}
+
+		if (!strncmp(fps_type, "uhd_4k_type", 11)) {
+			spec_pdata->chg_fps.type = FPS_TYPE_UHD_4K;
+		} else if (!strncmp(fps_type, "hybrid_incell_type", 18)) {
+			spec_pdata->chg_fps.type = FPS_TYPE_HYBRID_INCELL;
+		} else if (!strncmp(fps_type, "full_incell_type", 16)) {
+			spec_pdata->chg_fps.type = FPS_TYPE_FULL_INCELL;
+		} else {
+			pr_err("%s: Unable to read fps panel type\n", __func__);
+			goto error;
+		}
+
+		fps_mode = of_get_property(np,
+					"somc,change-fps-panel-mode", NULL);
+		if (!fps_mode) {
 			pr_err("%s:%d, Panel mode not specified\n",
 							__func__, __LINE__);
 			goto error;
 		}
 
-		if (!strncmp(panel_mode, "susres_mode", 11)) {
-			spec_pdata->fps_mode.mode = FPS_MODE_SUSRES;
-		} else if (!strncmp(panel_mode, "dynamic_mode", 12)) {
-			spec_pdata->fps_mode.mode = FPS_MODE_DYNAMIC;
+		if (!strncmp(fps_mode, "susres_mode", 11)) {
+			spec_pdata->chg_fps.mode = FPS_MODE_SUSRES;
+		} else if (!strncmp(fps_mode, "dynamic_mode", 12)) {
+			spec_pdata->chg_fps.mode = FPS_MODE_DYNAMIC;
 		} else {
 			pr_err("%s: Unable to read fps panel mode\n", __func__);
 			goto error;
 		}
 
-		mdss_dsi_parse_dcs_cmds(np, &spec_pdata->fps_cmds[FPS_MODE_OFF_RR_OFF],
-								"somc,fps-mode-off-rr-off", NULL);
-		mdss_dsi_parse_dcs_cmds(np, &spec_pdata->fps_cmds[FPS_MODE_OFF_RR_ON],
-								"somc,fps-mode-off-rr-on", NULL);
-		mdss_dsi_parse_dcs_cmds(np, &spec_pdata->fps_cmds[FPS_MODE_ON_RR_OFF],
-								"somc,fps-mode-on-rr-off", NULL);
-		mdss_dsi_parse_dcs_cmds(np, &spec_pdata->fps_cmds[FPS_MODE_ON_RR_ON],
-								"somc,fps-mode-on-rr-on", NULL);
+		switch (spec_pdata->chg_fps.type) {
+		case FPS_TYPE_UHD_4K:
+			(void)mdss_dsi_property_read_u32_var(np,
+				"somc,change-fps-rtn-pos",
+				(u32 **)&spec_pdata->chg_fps.send_pos.pos,
+				&spec_pdata->chg_fps.send_pos.num);
 
-		spec_pdata->fps_mode.type = FPS_MODE_OFF_RR_OFF;
+			rc = of_property_read_u32(np,
+					"somc,driver-ic-total-porch", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC total_porch not specified\n",
+								__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_total_porch = tmp;
+
+			rc = of_property_read_u32(np,
+						"somc,driver-ic-rclk", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC rclk not specified\n",
+								__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_rclk = tmp;
+
+			spec_pdata->chg_fps.rtn_adj = of_property_read_bool(np,
+					"somc,change-fps-rtn-adj");
+			break;
+		case FPS_TYPE_HYBRID_INCELL:
+			(void)mdss_dsi_property_read_u32_var(np,
+				"somc,change-fps-send-pos",
+				(u32 **)&spec_pdata->chg_fps.send_pos.pos,
+				&spec_pdata->chg_fps.send_pos.num);
+
+			rc = of_property_read_u32(np,
+					"somc,driver-ic-rtn",  &tmp);
+			if (rc) {
+				pr_err("%s: DrIC rtn not specified\n",
+								__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_rtn = tmp;
+
+			(void)mdss_dsi_property_read_u32_var(np,
+				"somc,change-fps-send-pos",
+				(u32 **)&spec_pdata->chg_fps.send_pos.pos,
+				&spec_pdata->chg_fps.send_pos.num);
+
+			rc = of_property_read_u32(np,
+						"somc,driver-ic-mclk", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC mclk not specified\n",
+					__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_mclk = tmp;
+
+			rc = of_property_read_u32(np,
+						"somc,driver-ic-vtouch", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC vtouch not specified\n",
+					__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_vtouch = tmp;
+
+			rc = of_property_read_u32(np,
+					"somc,change-fps-send-byte", &tmp);
+			if (rc) {
+				pr_err("%s: fps bytes send not specified\n",
+								__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.send_byte = tmp;
+
+			rc = of_property_read_u32(np,
+				"somc,change-fps-porch-mask-pos", &tmp);
+			if (rc) {
+				pr_warn("%s: fps mask position not specified\n",
+								__func__);
+				spec_pdata->chg_fps.mask_pos = 0;
+			} else {
+				spec_pdata->chg_fps.mask_pos = tmp;
+				rc = of_property_read_u32(np,
+					"somc,change-fps-porch-mask", &tmp);
+				if (rc) {
+					pr_warn("%s: fps mask not specified\n",
+								__func__);
+					spec_pdata->chg_fps.mask = 0x0;
+				} else {
+					spec_pdata->chg_fps.mask = tmp;
+				}
+			}
+
+			rc = of_property_read_u32_array(np,
+					"somc,change-fps-porch-range",
+					spec_pdata->chg_fps.porch_range,
+					FPS_PORCH_RNG_NUM);
+			if (rc) {
+				spec_pdata->chg_fps.porch_range[FPS_PORCH_RNG_MIN] = 0;
+				spec_pdata->chg_fps.porch_range[FPS_PORCH_RNG_MAX] = 0;
+			}
+			break;
+		case FPS_TYPE_FULL_INCELL:
+			(void)mdss_dsi_property_read_u32_var(np,
+				"somc,change-fps-rtn-pos",
+				(u32 **)&spec_pdata->chg_fps.send_pos.pos,
+				&spec_pdata->chg_fps.send_pos.num);
+
+			rc = of_property_read_u32(np,
+					"somc,driver-ic-total-porch", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC total_porch not specified\n",
+								__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_total_porch = tmp;
+
+			rc = of_property_read_u32(np,
+						"somc,driver-ic-rclk", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC rclk not specified\n",
+					__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_rclk = tmp;
+
+			rc = of_property_read_u32(np,
+						"somc,driver-ic-vtp", &tmp);
+			if (rc) {
+				pr_err("%s: DrIC vtp not specified\n",
+					__func__);
+				goto error;
+			}
+			spec_pdata->chg_fps.dric_tp = tmp;
+			break;
+		default:
+			pr_err("%s: Read panel mode failed.\n", __func__);
+			goto error;
+		}
 	}
 
 	return 0;
@@ -1888,113 +2028,375 @@ exit:
 	return ret;
 }
 
-void mdss_dsi_panel_fps_mode_set(struct mdss_dsi_ctrl_pdata *ctrl_pdata, int mode_type)
-{
+static void mdss_dsi_panel_driver_fps_cmd_send(
+		struct mdss_dsi_ctrl_pdata *ctrl_pdata,
+		u32 dfpks_rev, int dfpks) {
+	char dfps = (char)(dfpks_rev / KSEC);
 	struct mdss_panel_specific_pdata *spec_pdata = ctrl_pdata->spec_pdata;
+	struct mdss_panel_info *pinfo = &ctrl_pdata->panel_data.panel_info;
 
-	switch (mode_type) {
-	case FPS_MODE_OFF_RR_OFF:
-	case FPS_MODE_ON_RR_OFF:
-	case FPS_MODE_OFF_RR_ON:
-	case FPS_MODE_ON_RR_ON:
-		spec_pdata->fps_mode.type =  mode_type;
-		break;
-	default:
-		pr_err("%s: invalid value for fps mode type = %d\n",
-			__func__, mode_type);
-		return;
-	}
+	pinfo->mipi.frame_rate = dfps;
 
-	if ((ctrl_pdata->panel_data.panel_info.mipi.mode == DSI_CMD_MODE) &&
-			(spec_pdata->fps_cmds[spec_pdata->fps_mode.type].cmd_cnt)) {
-		pr_info("%s: change fps mode %d.\n", __func__, spec_pdata->fps_mode.type);
+	if (spec_pdata->chg_fps.mode != FPS_MODE_SUSRES) {
+		pr_debug("%s: fps change sequence\n", __func__);
 		mdss_dsi_panel_cmds_send(ctrl_pdata,
-				&spec_pdata->fps_cmds[spec_pdata->fps_mode.type],
+				&ctrl_pdata->spec_pdata->fps_cmds,
 				CMD_REQ_COMMIT);
-	} else {
-		pr_err("%s: change fps isn't supported\n", __func__);
 	}
+	pr_notice("%s: change fpks=%d\n", __func__, dfpks);
+
+	pinfo->new_fps		= dfps;
+	spec_pdata->input_fpks	= dfpks;
 }
 
-static void mdss_dsi_panel_driver_fps_mode_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
-{
+static int mdss_dsi_panel_driver_fps_calc_rtn(
+		struct mdss_dsi_ctrl_pdata *ctrl_pdata, int dfpks) {
+	u32 dfpks_rev;
+	u32 vtotal_porch, vdisp;
+	u32 vrclk, vtp;
+	u32 cmds, payload;
 	struct mdss_panel_specific_pdata *spec_pdata = ctrl_pdata->spec_pdata;
+	u16 rtn;
+	int i, j, byte_cnt;
+	char send_rtn[sizeof(u16)] = {0};
 
-	if (ctrl_pdata->panel_data.panel_info.mipi.mode == DSI_CMD_MODE) {
-		if (spec_pdata->fps_cmds[spec_pdata->fps_mode.type].cmd_cnt) {
-			pr_info("%s: fps mode %d.\n", __func__, spec_pdata->fps_mode.type);
-			mdss_dsi_panel_cmds_send(ctrl_pdata,
-					&spec_pdata->fps_cmds[spec_pdata->fps_mode.type],
-					CMD_REQ_COMMIT);
+	vtotal_porch = spec_pdata->chg_fps.dric_total_porch;
+	vdisp = spec_pdata->chg_fps.dric_vdisp;
+
+	vrclk = spec_pdata->chg_fps.dric_rclk;
+	vtp = spec_pdata->chg_fps.dric_tp;
+
+	if (!dfpks || !(vdisp + vtotal_porch + vtp)) {
+		pr_err("%s: Invalid param dfpks=%d vdisp=%d porch=%d vtp=%d\n",
+				__func__, dfpks, vdisp, vtotal_porch, vtp);
+		return -EINVAL;
+	}
+
+	rtn = (u16)(
+		(vrclk * KSEC) /
+		(dfpks * (vdisp + vtotal_porch + vtp))
+		);
+
+	if (!rtn || !(vdisp + vtotal_porch + vtp)) {
+		pr_err("%s: Invalid param rtn=%d vdisp=%d porch=%d vtp=%d\n",
+				__func__, dfpks, vdisp, vtotal_porch, vtp);
+		return -EINVAL;
+	}
+
+	dfpks_rev = (u32)(
+		(vrclk * KSEC) /
+		(rtn * (vdisp + vtotal_porch + vtp))
+		);
+
+	pr_debug("%s: porch=%d vdisp=%d vtp=%d vrclk=%d rtn=0x%x\n",
+		__func__, vtotal_porch, vdisp, vtp, vrclk, rtn);
+
+	for (i = 0; i < sizeof(send_rtn) ; i++) {
+		send_rtn[i] = (char)(rtn & 0x00FF);
+		pr_debug("%s: send_rtn[%d]=0x%x\n",
+				__func__, i, send_rtn[i]);
+		if (rtn > 0xFF) {
+			rtn = (rtn >> 8);
+		} else {
+			byte_cnt = i;
+			break;
 		}
 	}
+
+	for (i = 0; i < (spec_pdata->chg_fps.send_pos.num / 2); i++) {
+		cmds = spec_pdata->chg_fps.send_pos.pos[(i * 2)];
+		payload = spec_pdata->chg_fps.send_pos.pos[(i * 2) + 1];
+		for (j = 0; j <= byte_cnt ; j++)
+			CHANGE_PAYLOAD(cmds, payload + j) =
+				send_rtn[byte_cnt - j];
+	}
+
+	mdss_dsi_panel_driver_fps_cmd_send(ctrl_pdata, dfpks_rev, dfpks);
+
+	return 0;
 }
 
-static int mdss_dsi_panel_driver_fps_mode_check_state
-	(struct mdss_dsi_ctrl_pdata *ctrl_pdata, int mode_type)
-{
+static int mdss_dsi_panel_driver_fps_calc_porch
+		(struct mdss_dsi_ctrl_pdata *ctrl_pdata, int dfpks) {
+	u64 vmclk;
+	u64 vtouch;
+	u32 dfpks_rev;
+	u32 vdisp;
+	u32 cmds, payload;
+	u32 porch_range_max = 0;
+	u32 porch_range_min = 0;
+
+	int i, j;
+	u16 porch_calc = 0;
+	u16 send_byte;
+	u16 rtn;
+	u8 mask_pos;
+	char mask;
+	char porch[CHANGE_FPS_PORCH] = {0};
+	char send[CHANGE_FPS_SEND] = {0};
+	struct mdss_panel_specific_pdata *spec_pdata = ctrl_pdata->spec_pdata;
+	struct dsi_panel_cmds *fps_cmds = &(spec_pdata->fps_cmds);
+
+	rtn = spec_pdata->chg_fps.dric_rtn;
+	vdisp = spec_pdata->chg_fps.dric_vdisp;
+	vtouch = spec_pdata->chg_fps.dric_vtouch;
+	vmclk = (u64)spec_pdata->chg_fps.dric_mclk;
+	send_byte = spec_pdata->chg_fps.send_byte;
+	mask_pos = spec_pdata->chg_fps.mask_pos;
+	mask = spec_pdata->chg_fps.mask;
+	porch_range_max = spec_pdata->chg_fps.porch_range[FPS_PORCH_RNG_MAX];
+	porch_range_min = spec_pdata->chg_fps.porch_range[FPS_PORCH_RNG_MIN];
+
+	if (!dfpks || !vmclk || !rtn) {
+		pr_err("%s: Invalid param dfpks=%d vmclk=%llu rtn%d\n",
+				__func__, dfpks, vmclk, rtn);
+		return -EINVAL;
+	}
+
+	porch_calc = (u16)((
+			(((PSEC * KSEC) - (KSEC * vtouch * (u64)dfpks)) /
+			((u64)dfpks * vmclk * (u64)rtn)) - (u64)vdisp) / 2);
+
+	if (porch_range_max > 0) {
+		if ((porch_calc < porch_range_min)
+		||  (porch_calc > porch_range_max)) {
+			pr_err("%s: Not supported. porch:%d\n",
+				__func__, porch_calc);
+			return -EINVAL;
+		}
+	}
+
+	if (!(vmclk * rtn * (vdisp + porch_calc) + vtouch)) {
+		pr_err("%s: Invalid param \
+			vmclk=%llu rtn=%d vdisp=%d porch=%d vtouch=%llu\n",
+			__func__, vmclk, rtn, vdisp, porch_calc, vtouch);
+		return -EINVAL;
+	}
+
+	dfpks_rev = (u32)(
+		(PSEC * KSEC) /
+		(vmclk * rtn * (vdisp + porch_calc) + vtouch));
+
+	pr_debug("%s: porch=%d vdisp=%d vtouch=%llu vmclk=%llu rtn=0x%x\n",
+		__func__, porch_calc, vdisp, vtouch, vmclk, rtn);
+
+	for (i = 0; i < CHANGE_FPS_PORCH ; i++) {
+		porch[i] = (char)(porch_calc & 0x00FF);
+		pr_debug("%s: porch[%d]=0x%x\n", __func__, i, porch[i]);
+		porch_calc = (porch_calc >> 8);
+	}
+
+	for (i = 0; i < send_byte; i = i + 2) {
+		memcpy(send + i, porch, sizeof(char));
+		memcpy(send + i + 1, porch + 1, sizeof(char));
+	}
+
+	for (i = 0; i < (spec_pdata->chg_fps.send_pos.num / 2); i++) {
+		cmds = spec_pdata->chg_fps.send_pos.pos[(i * 2)];
+		payload = spec_pdata->chg_fps.send_pos.pos[(i * 2) + 1];
+		for (j = 0; j < send_byte ; j++) {
+			if (j == mask_pos)
+				send[j] = (mask | send[j]);
+			CHANGE_PAYLOAD(cmds, payload + j) = send[j];
+			pr_debug("%s: fps_cmds.cmds[%d].payload[%d]) = 0x%x\n",
+				__func__,
+				cmds, payload + j,
+				fps_cmds->cmds[cmds].payload[payload + j]);
+		}
+	}
+
+	mdss_dsi_panel_driver_fps_cmd_send(ctrl_pdata, dfpks_rev, dfpks);
+
+	return 0;
+}
+
+static int mdss_dsi_panel_driver_fps_calc_adj
+		(struct mdss_dsi_ctrl_pdata *ctrl_pdata, int dfpks) {
+	u32 dfpks_rev;
+	u32 vtotal_porch, vdisp, vrclk;
+	u32 cmds, payload;
+	struct mdss_panel_specific_pdata *spec_pdata = ctrl_pdata->spec_pdata;
+	u16 rtn;
+	int i, j, byte_cnt;
+	char send_rtn[sizeof(u16)] = {0}, adj;
+
+	if (!spec_pdata) {
+		pr_err("%s: Invalid input data\n", __func__);
+		return -EINVAL;
+	}
+
+	vtotal_porch = spec_pdata->chg_fps.dric_total_porch;
+	vdisp = spec_pdata->chg_fps.dric_vdisp;
+	vrclk = spec_pdata->chg_fps.dric_rclk;
+	adj = spec_pdata->chg_fps.rtn_adj ? 1 : 0;
+
+	if (!dfpks || !(vdisp + vtotal_porch)) {
+		pr_err("%s: Invalid param dfpks=%d vdisp=%d porch=%d\n",
+				__func__, dfpks, vdisp, vtotal_porch);
+		return -EINVAL;
+	}
+
+	rtn = (u16)(vrclk / (dfpks * (vdisp + vtotal_porch) / 1000)) - adj;
+
+	if (!rtn || !(vdisp + vtotal_porch)) {
+		pr_err("%s: Invalid param rtn=%d vdisp=%d　porch=%d\n",
+				__func__, rtn, vdisp, vtotal_porch);
+		return -EINVAL;
+	}
+
+	dfpks_rev = (u32)(vrclk / (rtn * (vdisp + vtotal_porch) / 1000));
+
+	pr_debug("%s: porch=%d vdisp=%d vrclk=%d rtn=0x%x adj=%d\n",
+		__func__, vtotal_porch, vdisp, vrclk, rtn + adj, adj);
+
+	for (i = 0; i < sizeof(send_rtn) ; i++) {
+		send_rtn[i] = (char)(rtn & 0x00FF);
+		pr_debug("%s: send_rtn[%d]=0x%x\n",
+				__func__, i, send_rtn[i]);
+		if (rtn > 0xFF) {
+			rtn = (rtn >> 8);
+		} else {
+			byte_cnt = i;
+			break;
+		}
+	}
+
+	for (i = 0; i < (spec_pdata->chg_fps.send_pos.num / 2); i++) {
+		cmds = spec_pdata->chg_fps.send_pos.pos[(i * 2)];
+		payload = spec_pdata->chg_fps.send_pos.pos[(i * 2) + 1];
+		for (j = 0; j <= byte_cnt ; j++)
+			CHANGE_PAYLOAD(cmds, payload + j) =
+				send_rtn[byte_cnt - j];
+	}
+
+	mdss_dsi_panel_driver_fps_cmd_send(ctrl_pdata, dfpks_rev, dfpks);
+
+	return 0;
+}
+
+static int mdss_dsi_panel_chg_fps_calc
+		(struct mdss_dsi_ctrl_pdata *ctrl_pdata, int dfpks) {
+	int ret = -EINVAL;
+	struct mdss_panel_specific_pdata *spec_pdata = NULL;
+
+	spec_pdata = ctrl_pdata->spec_pdata;
+	if (!spec_pdata) {
+		pr_err("%s: Invalid input data\n", __func__);
+		return ret;
+	}
+
+	switch (spec_pdata->chg_fps.type) {
+	case FPS_TYPE_UHD_4K:
+		ret = mdss_dsi_panel_driver_fps_calc_adj(ctrl_pdata, dfpks);
+		break;
+	case FPS_TYPE_HYBRID_INCELL:
+		ret = mdss_dsi_panel_driver_fps_calc_porch(ctrl_pdata, dfpks);
+		break;
+	case FPS_TYPE_FULL_INCELL:
+		ret = mdss_dsi_panel_driver_fps_calc_rtn(ctrl_pdata, dfpks);
+		break;
+	default:
+		pr_err("%s: Invalid type data\n", __func__);
+		break;
+	}
+
+	return ret;
+}
+
+static int mdss_dsi_panel_chg_fps_check_state
+		(struct mdss_dsi_ctrl_pdata *ctrl, int dfpks) {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
 	struct msm_fb_data_type *mfd = mdata->ctl_off->mfd;
 	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
-	struct mdss_panel_specific_pdata *spec_pdata;
+	struct mdss_panel_info *pinfo = &ctrl->panel_data.panel_info;
+	struct mdss_dsi_ctrl_pdata *sctrl = NULL;
+	int rc = 0;
 
-	spec_pdata = ctrl_pdata->spec_pdata;
-
-	if (!mdp5_data || !mdp5_data->ctl || !mdp5_data->ctl->power_state)
+	if (!mdp5_data->ctl || !mdp5_data->ctl->power_state)
 		goto error;
 
-	if (!display_onoff_state) {
-		pr_err("%s: Disp-On is not yet completed. Please retry\n", __func__);
-		goto error;
+	if ((pinfo->mipi.mode == DSI_CMD_MODE) &&
+			(!ctrl->spec_pdata->fps_cmds.cmd_cnt))
+		goto cmd_cnt_err;
+
+	if (!display_onoff_state)
+		goto disp_onoff_state_err;
+
+	if (mdss_dsi_sync_wait_enable(ctrl)) {
+		sctrl = mdss_dsi_get_other_ctrl(ctrl);
+		if (sctrl) {
+			if (mdss_dsi_sync_wait_trigger(ctrl)) {
+				rc = mdss_dsi_panel_chg_fps_calc(sctrl, dfpks);
+				if (rc < 0)
+					goto end;
+				rc = mdss_dsi_panel_chg_fps_calc(ctrl, dfpks);
+			} else {
+				rc = mdss_dsi_panel_chg_fps_calc(ctrl, dfpks);
+				if (rc < 0)
+					goto end;
+				rc = mdss_dsi_panel_chg_fps_calc(sctrl, dfpks);
+			}
+		} else {
+			rc = mdss_dsi_panel_chg_fps_calc(ctrl, dfpks);
+		}
+	} else {
+		rc = mdss_dsi_panel_chg_fps_calc(ctrl, dfpks);
 	}
-
-	if (spec_pdata->fps_mode.mode == FPS_MODE_DYNAMIC)
-		mdss_dsi_panel_fps_mode_set(ctrl_pdata, mode_type);
-
-	return 0;
-
+end:
+	return rc;
+cmd_cnt_err:
+	pr_err("%s: change fps isn't supported\n", __func__);
+	return -EINVAL;
+disp_onoff_state_err:
+	pr_err("%s: Disp-On is not yet completed. Please retry\n", __func__);
+	return -EINVAL;
 error:
 	return -EINVAL;
 }
 
-ssize_t mdss_dsi_panel_driver_fps_mode_store(struct device *dev,
+ssize_t mdss_dsi_panel_driver_change_fpks_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	int mode_type, rc;
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = dev_get_drvdata(dev);
+	int dfpks, rc;
 
 	if (!ctrl_pdata || !ctrl_pdata->spec_pdata) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
 	}
 
-	if (!ctrl_pdata->spec_pdata->fps_mode.enable) {
+	if (!ctrl_pdata->spec_pdata->chg_fps.enable) {
 		pr_err("%s: change fps not enabled\n", __func__);
 		return -EINVAL;
 	}
 
-	rc = kstrtoint(buf, 10, &mode_type);
+	rc = kstrtoint(buf, 10, &dfpks);
 	if (rc < 0) {
 		pr_err("%s: Error, buf = %s\n", __func__, buf);
 		return rc;
 	}
 
-	if (mode_type == ctrl_pdata->spec_pdata->fps_mode.type) {
-		pr_notice("%s: fps mode is already %d\n", __func__,
-			mode_type);
+	if (dfpks < 1000 * CHANGE_FPS_MIN
+			|| dfpks > 1000 * CHANGE_FPS_MAX) {
+		pr_err("%s: invalid value for change_fpks buf = %s\n",
+				 __func__, buf);
+		return -EINVAL;
+	}
+
+	if (dfpks == ctrl_pdata->spec_pdata->input_fpks) {
+		pr_notice("%s: fpks is already %d\n", __func__, dfpks);
 		return count;
 	}
 
-	rc = mdss_dsi_panel_driver_fps_mode_check_state(ctrl_pdata, mode_type);
+	rc = mdss_dsi_panel_chg_fps_check_state(ctrl_pdata, dfpks);
 	if (rc) {
 		pr_err("%s: Error, rc = %d\n", __func__, rc);
 		return rc;
 	}
-
 	return count;
 }
 
-ssize_t mdss_dsi_panel_driver_fps_mode_show(struct device *dev,
+ssize_t mdss_dsi_panel_driver_change_fpks_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = dev_get_drvdata(dev);
@@ -2002,10 +2404,72 @@ ssize_t mdss_dsi_panel_driver_fps_mode_show(struct device *dev,
 	struct msm_fb_data_type *mfd = mdata->ctl_off->mfd;
 	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
 
-	if (!mdp5_data || !mdp5_data->ctl || !mdp5_data->ctl->power_state)
+	if (!mdp5_data->ctl || !mdp5_data->ctl->power_state)
 		return 0;
 
-	return scnprintf(buf, PAGE_SIZE, "%d\n", ctrl_pdata->spec_pdata->fps_mode.type);
+	return scnprintf(buf, PAGE_SIZE, "%d\n",
+		ctrl_pdata->spec_pdata->input_fpks);
+}
+
+ssize_t mdss_dsi_panel_driver_change_fps_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct mdss_dsi_ctrl_pdata *ctrl_pdata = dev_get_drvdata(dev);
+	int dfps, dfpks, rc;
+
+	if (!ctrl_pdata || !ctrl_pdata->spec_pdata) {
+		pr_err("%s: Invalid input data\n", __func__);
+		return -EINVAL;
+	}
+
+	if (!ctrl_pdata->spec_pdata->chg_fps.enable) {
+		pr_err("%s: change fps not enabled\n", __func__);
+		return -EINVAL;
+	}
+
+	rc = kstrtoint(buf, 10, &dfps);
+	if (rc < 0) {
+		pr_err("%s: Error, buf = %s\n", __func__, buf);
+		return rc;
+	}
+
+	if (dfps >= 1000 * CHANGE_FPS_MIN
+			&& dfps <= 1000 * CHANGE_FPS_MAX) {
+		dfpks = dfps;
+	} else if (dfps >= CHANGE_FPS_MIN && dfps <= CHANGE_FPS_MAX) {
+		dfpks = dfps * 1000;
+	} else {
+		pr_err("%s: invalid value for change_fps buf = %s\n",
+				__func__, buf);
+		return -EINVAL;
+	}
+
+	if (dfpks == ctrl_pdata->spec_pdata->input_fpks) {
+		pr_notice("%s: fpks is already %d\n", __func__, dfpks);
+		return count;
+	}
+
+	rc = mdss_dsi_panel_chg_fps_check_state(ctrl_pdata, dfpks);
+	if (rc) {
+		pr_err("%s: Error, rc = %d\n", __func__, rc);
+		return rc;
+	}
+	return count;
+}
+
+ssize_t mdss_dsi_panel_driver_change_fps_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct mdss_dsi_ctrl_pdata *ctrl_pdata = dev_get_drvdata(dev);
+	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
+	struct msm_fb_data_type *mfd = mdata->ctl_off->mfd;
+	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
+
+	if (!mdp5_data->ctl || !mdp5_data->ctl->power_state)
+		return 0;
+
+	return scnprintf(buf, PAGE_SIZE, "%d\n",
+		ctrl_pdata->spec_pdata->input_fpks / 1000);
 }
 
 void mdss_dsi_panel_driver_check_splash_enable(
@@ -2015,6 +2479,29 @@ void mdss_dsi_panel_driver_check_splash_enable(
 		display_onoff_state = true;
 	else
 		display_onoff_state = false;
+}
+
+static void mdss_dsi_panel_driver_chg_fps_cmds_send
+			(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	struct mdss_panel_specific_pdata *spec_pdata = NULL;
+	u32 fps_cmds, fps_payload;
+	char rtn;
+
+	spec_pdata = ctrl_pdata->spec_pdata;
+
+	if (ctrl_pdata->panel_data.panel_info.mipi.mode == DSI_CMD_MODE) {
+		if (spec_pdata->fps_cmds.cmd_cnt) {
+			fps_cmds = spec_pdata->chg_fps.send_pos.pos[0];
+			fps_payload = spec_pdata->chg_fps.send_pos.pos[1];
+			rtn = CHANGE_PAYLOAD(fps_cmds, fps_payload);
+			pr_debug("%s: change fps sequence --- rtn = 0x%x\n",
+				__func__, rtn);
+			mdss_dsi_panel_cmds_send(ctrl_pdata,
+				&ctrl_pdata->spec_pdata->fps_cmds,
+				CMD_REQ_COMMIT);
+		}
+	}
 }
 
 void mdss_dsi_panel_driver_fb_notifier_call_chain(
@@ -2071,17 +2558,27 @@ void mdss_dsi_panel_driver_off(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 
 void mdss_dsi_panel_driver_post_on(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
+	struct mdss_panel_specific_pdata *spec_pdata = NULL;
 	struct mdss_panel_data *pdata;
 
+	spec_pdata = ctrl_pdata->spec_pdata;
 	pdata = &(ctrl_pdata->panel_data);
 
-	if (!pdata || pdata->panel_info.pdest != DISPLAY_1)
+	if (!pdata)
 		return;
 
-	if (ctrl_pdata->spec_pdata->fps_mode.enable)
-		mdss_dsi_panel_driver_fps_mode_cmds_send(ctrl_pdata);
-	else
+	if (pdata->panel_info.pdest != DISPLAY_1)
+		return;
+
+	if (spec_pdata->chg_fps.enable) {
+		if (spec_pdata->chg_fps.mode == FPS_MODE_SUSRES)
+			mdss_dsi_panel_chg_fps_calc(ctrl_pdata,
+						spec_pdata->input_fpks);
+
+		mdss_dsi_panel_driver_chg_fps_cmds_send(ctrl_pdata);
+	} else {
 		pr_notice("%s: change fps is not supported.\n", __func__);
+	}
 
 	display_onoff_state = true;
 }

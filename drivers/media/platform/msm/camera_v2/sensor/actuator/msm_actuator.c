@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -130,7 +130,8 @@ static ssize_t msm_actuator_hall_show(struct device *dev, struct device_attribut
 	struct msm_actuator_ctrl_t *o_ctrl = dev_get_drvdata(dev);
 	uint16_t hall_addr = 0x3C;
 
-#if defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+|| defined(CONFIG_MACH_SONY_HOUOU)
 	if (o_ctrl->pdev->id == 0)
 	{
 		hall_addr = 0x0C;
@@ -358,7 +359,8 @@ static int msm_actuator_bivcm_handle_i2c_ops(
 
 				value = ivalue2;
 			}
-#elif defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#elif defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+|| defined(CONFIG_MACH_SONY_HOUOU)
 			if (a_ctrl->pdev->id == 0)
 			{
 				value = (next_lens_position <<
@@ -973,6 +975,8 @@ static int32_t msm_actuator_bivcm_move_focus(
 		a_ctrl->curr_step_pos, dest_step_pos, curr_lens_pos);
 
 	while (a_ctrl->curr_step_pos != dest_step_pos) {
+		if (a_ctrl->curr_region_index >= a_ctrl->region_size)
+			break;
 		step_boundary =
 			a_ctrl->region_params[a_ctrl->curr_region_index].
 			step_bound[dir];

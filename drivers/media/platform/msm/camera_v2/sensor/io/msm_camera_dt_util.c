@@ -30,7 +30,11 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+       || defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+       || defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
 #define GPIO_NUM_IDX 0
 #define GPIO_CNT_IDX 1
 #define GPIO_CNT_SIZE  2
@@ -81,7 +85,7 @@ static int msm_camera_release_gpio(int sensor_gpio, int sensor_gpio_num)
 
 	return 0;
 }
-#endif // #if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 
 int msm_camera_fill_vreg_params(struct camera_vreg_t *cam_vreg,
 	int num_vreg, struct msm_sensor_power_setting *power_setting,
@@ -1483,9 +1487,13 @@ int msm_camera_power_up(struct msm_camera_power_ctrl_t *ctrl,
 	enum msm_camera_device_type_t device_type,
 	struct msm_camera_i2c_client *sensor_i2c_client)
 {
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) ||	defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+       || defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+       || defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
 	int count = 0;
-#endif // #if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 	int rc = 0, index = 0, no_gpio = 0, ret = 0;
 	struct msm_sensor_power_setting *power_setting = NULL;
 
@@ -1563,13 +1571,17 @@ int msm_camera_power_up(struct msm_camera_power_ctrl_t *ctrl,
 				ctrl->gpio_conf->gpio_num_info->gpio_num
 				[power_setting->seq_val],
 				(int) power_setting->config_val);
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) ||	defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+       || defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+       || defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
 			if ((power_setting->seq_val == SENSOR_GPIO_VIO || power_setting->seq_val == SENSOR_GPIO_VANA || power_setting->seq_val == SENSOR_GPIO_VDIG)
 				&& power_setting->config_val == GPIO_OUT_HIGH) {
 				count = msm_camera_acquire_gpio(power_setting->seq_val, ctrl->gpio_conf->gpio_num_info->gpio_num[power_setting->seq_val]);
 				pr_err("PU: mGpioCnt[%d]: %d", power_setting->seq_val, count);
 			}
-#endif // #if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 			break;
 		case SENSOR_VREG:
 			if (power_setting->seq_val >= CAM_VREG_MAX) {
@@ -1714,9 +1726,13 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 	enum msm_camera_device_type_t device_type,
 	struct msm_camera_i2c_client *sensor_i2c_client)
 {
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) ||	defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+       || defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+       || defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
 	int count = 0;
-#endif // #if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 	int index = 0, ret = 0;
 	struct msm_sensor_power_setting *pd = NULL;
 	struct msm_sensor_power_setting *ps;
@@ -1753,7 +1769,11 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 			if (!ctrl->gpio_conf->gpio_num_info->valid
 				[pd->seq_val])
 				continue;
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+       || defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+       || defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
 			if ((pd->seq_val == SENSOR_GPIO_VIO || pd->seq_val == SENSOR_GPIO_VANA || pd->seq_val == SENSOR_GPIO_VDIG) && pd->config_val == GPIO_OUT_LOW) {
 				count = msm_camera_release_gpio(pd->seq_val, ctrl->gpio_conf->gpio_num_info->gpio_num[pd->seq_val]);
 				pr_err("PD: mGpioCnt[%d]: %d", pd->seq_val, count);
@@ -1769,7 +1789,7 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 				ctrl->gpio_conf->gpio_num_info->gpio_num
 				[pd->seq_val],
 				(int) pd->config_val);
-#endif // #if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined( CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 			break;
 		case SENSOR_VREG:
 			if (pd->seq_val == INVALID_VREG)

@@ -136,24 +136,37 @@ struct incell_ctrl {
 #define DEFAULT_FPS_LOG_INTERVAL 100
 #define DEFAULT_FPS_ARRAY_SIZE 120
 
+#define CHANGE_FPS_MIN 22
+#define CHANGE_FPS_MAX 60
+
+#define CHANGE_FPS_PORCH 2
+#define CHANGE_FPS_SEND 10
+
+#define PSEC ((u64)1000000000000)
+#define KSEC ((u64)1000)
+#define CHANGE_PAYLOAD(a, b) (spec_pdata->fps_cmds.cmds[a].payload[b])
+
+typedef enum {
+	FPS_PORCH_RNG_MIN = 0,
+	FPS_PORCH_RNG_MAX,
+	FPS_PORCH_RNG_NUM,
+} fps_porch_rng_index;
+
 typedef enum FPS_TYPE {
 	FPSD,
 	VPSD
 } fps_type;
 
-/* fps mode */
+typedef enum FPS_PANEL_TYPE {
+	FPS_TYPE_UHD_4K,
+	FPS_TYPE_HYBRID_INCELL,
+	FPS_TYPE_FULL_INCELL,
+} fps_panel_type;
+
 typedef enum FPS_PANEL_MODE {
 	FPS_MODE_SUSRES,
 	FPS_MODE_DYNAMIC,
 } fps_panel_mode;
-
-typedef enum FPS_MODE_TYPE {
-	FPS_MODE_OFF_RR_OFF,
-	FPS_MODE_ON_RR_OFF,
-	FPS_MODE_OFF_RR_ON,
-	FPS_MODE_ON_RR_ON,
-	FPS_MODE_MAX,
-} fps_mode_type;
 
 struct fps_array {
 	u32 frame_nbr;
@@ -175,10 +188,37 @@ struct fps_data {
 	bool vps_en;
 };
 
-struct mdss_dsi_fps_mode {
+struct change_fps_send_pos {
+	int num;
+	int *pos;
+};
+
+struct change_fps {
+	/* common */
 	bool enable;
+	fps_panel_type type;
 	fps_panel_mode mode;
-	fps_mode_type type;
+	u32 dric_vdisp;
+	struct change_fps_send_pos send_pos;
+	u32 dric_rclk;
+	u32 dric_total_porch;
+	u8 chg_fps_type;
+	u8 chg_fps_mode;
+
+	/* uhd_4k */
+	bool rtn_adj;
+
+	/* hybrid */
+	u32 dric_mclk;
+	u32 dric_vtouch;
+	u32 porch_range[FPS_PORCH_RNG_NUM];
+	u16 dric_rtn;
+	u16 send_byte;
+	u16 mask_pos;
+	char mask;
+
+	/* full */
+	u32 dric_tp;
 };
 
 struct mdss_panel_power_seq {
@@ -248,8 +288,9 @@ struct mdss_panel_specific_pdata {
 
 	int (*pcc_setup)(struct mdss_panel_data *pdata);
 
-	struct mdss_dsi_fps_mode fps_mode;
-	struct dsi_panel_cmds fps_cmds[FPS_MODE_MAX];
+	int input_fpks;
+	struct change_fps chg_fps;
+	struct dsi_panel_cmds fps_cmds;
 
 	void (*crash_counter_reset)(void);
 	void (*blackscreen_det)(void);
@@ -267,10 +308,16 @@ struct fps_data mdss_dsi_panel_driver_get_fps_data(void);
 struct fps_data mdss_dsi_panel_driver_get_vps_data(void);
 ssize_t mdss_dsi_panel_driver_vsyncs_per_ksecs_store(struct device *dev,
 			 const char *buf, size_t count);
-ssize_t mdss_dsi_panel_driver_fps_mode_store(struct device *dev,
+
+ssize_t mdss_dsi_panel_driver_change_fpks_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count);
-ssize_t mdss_dsi_panel_driver_fps_mode_show(struct device *dev,
+ssize_t mdss_dsi_panel_driver_change_fpks_show(struct device *dev,
 		struct device_attribute *attr, char *buf);
+ssize_t mdss_dsi_panel_driver_change_fps_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count);
+ssize_t mdss_dsi_panel_driver_change_fps_show(struct device *dev,
+		struct device_attribute *attr, char *buf);
+
 void mdss_dsi_panel_driver_detection(struct platform_device *pdev,
 		struct device_node **np);
 int mdss_dsi_panel_driver_pinctrl_init(struct mdss_dsi_ctrl_pdata *ctrl_pdata);
@@ -315,7 +362,6 @@ struct mdss_panel_specific_pdata *mdss_panel2spec_pdata(
 	struct mdss_panel_data *pdata);
 void mdss_dsi_panel_driver_dump_incell_sts(struct incell_ctrl *incell);
 void mdss_dsi_panel_driver_update_incell_bk(struct incell_ctrl *incell);
-int mdss_dsi_panel_driver_reset_touch_ctrl(struct mdss_panel_data *pdata, bool en);
 
 /* Qualcomm original function */
 int mdss_dsi_pinctrl_set_state(struct mdss_dsi_ctrl_pdata *ctrl_pdata,

@@ -22,9 +22,13 @@
 #include "msm_camera_i2c_mux.h"
 #include <linux/regulator/rpm-smd-regulator.h>
 #include <linux/regulator/consumer.h>
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 #include <linux/proc_fs.h>
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
@@ -36,13 +40,16 @@ static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl;
 extern int qpnp_led_set_rgb_scale(int scale);
 #endif
 
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 #define sensor_main_source 1
 #define sensor_2nd_source 2
 char cei_cid_node[3][64] = {""};
 bool initCamIdNode = FALSE;
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
-
+#endif
 static void msm_sensor_adjust_mclk(struct msm_camera_power_ctrl_t *ctrl)
 {
 	int idx;
@@ -132,7 +139,7 @@ int32_t msm_sensor_free_sensor_data(struct msm_sensor_ctrl_t *s_ctrl)
 
 int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 {
-	int rc;
+	int rc = 0;
 	struct msm_camera_power_ctrl_t *power_info;
 	enum msm_camera_device_type_t sensor_device_type;
 	struct msm_camera_i2c_client *sensor_i2c_client;
@@ -159,9 +166,9 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 	/* Power down secure session if it exist*/
 	if (s_ctrl->is_secure)
 		msm_camera_tz_i2c_power_down(sensor_i2c_client);
-#ifdef CONFIG_SONY_CAM_EXT
-	s_ctrl->thermal_info.status = -ENODEV;
-#endif
+
+    s_ctrl->thermal_info.status = -ENODEV;
+
 	rc = msm_camera_power_down(power_info, sensor_device_type,
 		sensor_i2c_client);
 #if defined(CONFIG_LEDS_QPNP_RGB_SCALE) && (CONFIG_FRONT_CAMERA_LED_SCALE > 0)
@@ -230,11 +237,13 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 		rc = msm_camera_power_up(power_info, s_ctrl->sensor_device_type,
 			sensor_i2c_client);
 #if defined(CONFIG_LEDS_QPNP_RGB_SCALE) && (CONFIG_FRONT_CAMERA_LED_SCALE > 0)
-		if (s_ctrl->sensordata->sensor_info->position == 1) {
-			qpnp_led_set_rgb_scale(CONFIG_FRONT_CAMERA_LED_SCALE);
-		}
+	if (s_ctrl->sensordata->sensor_info->position == 1) {
+		qpnp_led_set_rgb_scale(CONFIG_FRONT_CAMERA_LED_SCALE);
+	}
 #endif
-#if defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 		if (!strcmp(s_ctrl->sensordata->sensor_name, "s5k4h8")) msleep(50);
 #endif
 		if (rc < 0)
@@ -249,9 +258,8 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			break;
 		}
 	}
-#ifdef CONFIG_SONY_CAM_EXT
-	s_ctrl->thermal_info.status = -EINVAL;
-#endif
+
+        s_ctrl->thermal_info.status = -EINVAL;
 	return rc;
 }
 
@@ -276,9 +284,13 @@ static uint16_t msm_sensor_id_by_mask(struct msm_sensor_ctrl_t *s_ctrl,
 
 int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 {
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 	int CAM_ID = 0;
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 	int rc = 0;
 	uint16_t chipid = 0;
 	struct msm_camera_i2c_client *sensor_i2c_client;
@@ -317,13 +329,17 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		return -ENODEV;
 	}
 
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 	if (CAM_ID == 0) {
 		snprintf(cei_cid_node[s_ctrl->id],sizeof(cei_cid_node[s_ctrl->id]),"%d", sensor_main_source);
 	} else {
 		snprintf(cei_cid_node[s_ctrl->id],sizeof(cei_cid_node[s_ctrl->id]),"%d", sensor_2nd_source);
 	}
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 
 	return rc;
 }
@@ -438,8 +454,7 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 	CDBG("%s:%d %s cfgtype = %d\n", __func__, __LINE__,
 		s_ctrl->sensordata->sensor_name, cdata->cfgtype);
 	switch (cdata->cfgtype) {
-#ifdef CONFIG_SONY_CAM_EXT
-	case CFG_SONY_CAMERA_SET_THERMAL: {
+        case CFG_SONY_CAMERA_SET_THERMAL: {
 		int32_t thermal = 0;
 
 		if (copy_from_user(&thermal,
@@ -455,7 +470,6 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 			s_ctrl->thermal_info.status, s_ctrl->thermal_info.thermal);
 		break;
 	}
-#endif
 	case CFG_GET_SENSOR_INFO:
 		memcpy(cdata->cfg.sensor_info.sensor_name,
 			s_ctrl->sensordata->sensor_name,
@@ -1554,7 +1568,11 @@ static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl = {
 	.i2c_write_table_sync_block = msm_camera_tz_i2c_write_table_sync_block,
 };
 
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS)  \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 static int subsys_camera_id_read(struct seq_file *m, void *v)
 {
 	int i = 0;
@@ -1578,7 +1596,7 @@ static  struct file_operations fcamera_proc_fopsReturnId = {
 	.open  = proc_cameraId_open,
 	.read  = seq_read,
 };
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 
 int32_t msm_sensor_init_default_params(struct msm_sensor_ctrl_t *s_ctrl)
 {
@@ -1641,17 +1659,19 @@ int32_t msm_sensor_init_default_params(struct msm_sensor_ctrl_t *s_ctrl)
 	mount_pos = mount_pos | ((s_ctrl->sensordata->sensor_info->
 					sensor_mount_angle / 90) << 8);
 	s_ctrl->msm_sd.sd.entity.flags = mount_pos | MEDIA_ENT_FL_DEFAULT;
-#ifdef CONFIG_SONY_CAM_EXT
-	s_ctrl->thermal_info.status = -ENODEV;
+        s_ctrl->thermal_info.status = -ENODEV;
 	s_ctrl->thermal_info.thermal = 0;
-#endif
 
-#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#if defined(CONFIG_MACH_SONY_KIRIN) \
+	|| defined(CONFIG_MACH_SONY_KIRIN_DSDS) \
+	|| defined(CONFIG_MACH_SONY_MERMAID) \
+	|| defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+	|| defined(CONFIG_MACH_SONY_HOUOU)
 	if (!initCamIdNode) {
 		proc_create("driver/camsensorid", 0, NULL, &fcamera_proc_fopsReturnId);
 		initCamIdNode = TRUE;
 	}
-#endif //#if defined(CONFIG_MACH_SONY_KIRIN) || defined(CONFIG_MACH_SONY_KIRIN_DSDS) || defined(CONFIG_MACH_SONY_MERMAID) || defined(CONFIG_MACH_SONY_MERMAID_DSDS)
+#endif
 
 	return 0;
 }

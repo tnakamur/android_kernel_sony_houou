@@ -13,11 +13,6 @@
  * instructions (which are not available from user mode) to ensure
  * that they are atomic.
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2019 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #ifndef __ASM_ARM_BITOPS_H
 #define __ASM_ARM_BITOPS_H

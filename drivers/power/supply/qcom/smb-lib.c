@@ -3897,8 +3897,6 @@ irqreturn_t smblib_handle_otg_overcurrent(int irq, void *data)
 	}
 
 	if (chg->wa_flags & OTG_WA) {
-		schedule_work(&chg->ocp_otg_wa_work);
-
 		if (stat & OTG_OC_DIS_SW_STS_RT_STS_BIT)
 			smblib_err(chg, "OTG disabled by hw\n");
 
@@ -5599,17 +5597,6 @@ unlock:
 	mutex_unlock(&chg->otg_oc_lock);
 }
 
-#if defined(CONFIG_SOMC_CHARGER_EXTENSION)
-static void somc_ocp_otg_wa_work(struct work_struct *work)
-{
-	struct smb_charger *chg = container_of(work, struct smb_charger,
-								ocp_otg_wa_work);
-
-	smblib_err(chg, "over-current detected on VBUS\n");
-	somc_usb_otg_regulator_ocp_notify(chg);
-}
-#endif
-
 static void smblib_vconn_oc_work(struct work_struct *work)
 {
 	struct smb_charger *chg = container_of(work, struct smb_charger,
@@ -6073,9 +6060,6 @@ int smblib_init(struct smb_charger *chg)
 	INIT_DELAYED_WORK(&chg->hvdcp_detect_work, smblib_hvdcp_detect_work);
 	INIT_DELAYED_WORK(&chg->clear_hdc_work, clear_hdc_work);
 	INIT_WORK(&chg->otg_oc_work, smblib_otg_oc_work);
-#if defined(CONFIG_SOMC_CHARGER_EXTENSION)
-	INIT_WORK(&chg->ocp_otg_wa_work, somc_ocp_otg_wa_work);
-#endif
 	INIT_WORK(&chg->vconn_oc_work, smblib_vconn_oc_work);
 	INIT_DELAYED_WORK(&chg->otg_ss_done_work, smblib_otg_ss_done_work);
 	INIT_DELAYED_WORK(&chg->icl_change_work, smblib_icl_change_work);
@@ -6167,9 +6151,6 @@ int smblib_deinit(struct smb_charger *chg)
 		cancel_delayed_work_sync(&chg->hvdcp_detect_work);
 		cancel_delayed_work_sync(&chg->clear_hdc_work);
 		cancel_work_sync(&chg->otg_oc_work);
-#if defined(CONFIG_SOMC_CHARGER_EXTENSION)
-		cancel_work_sync(&chg->ocp_otg_wa_work);
-#endif
 		cancel_work_sync(&chg->vconn_oc_work);
 		cancel_delayed_work_sync(&chg->otg_ss_done_work);
 		cancel_delayed_work_sync(&chg->icl_change_work);

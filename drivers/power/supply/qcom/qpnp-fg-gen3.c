@@ -1205,7 +1205,7 @@ static int fg_get_batt_id(struct fg_chip *chip)
 	fg_dbg(chip, FG_STATUS, "batt_id: %d\n", batt_id);
 	chip->batt_id_ohms = batt_id;
 out:
-	ret = fg_batt_missing_config(chip, true);
+	ret = fg_batt_missing_config(chip, false);
 	if (ret < 0) {
 		pr_err("Error in enabling BMD, ret=%d\n", ret);
 		return ret;

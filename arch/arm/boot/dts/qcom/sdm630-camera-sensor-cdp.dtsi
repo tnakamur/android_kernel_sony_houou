@@ -10,6 +10,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+/*
+ * NOTE: This file has been modified by Sony Mobile Communications Inc.
+ * Modifications are Copyright (c) 2019 Sony Mobile Communications Inc,
+ * and licensed under the license of the file.
+ */
 
 &soc {
 	led_flash0: qcom,camera-flash@0 {
@@ -69,6 +74,7 @@
 	};
 
 	ois0: qcom,ois@0 {
+/*
 		cell-index = <0>;
 		reg = <0x0>;
 		compatible = "qcom,ois";
@@ -82,6 +88,7 @@
 		pinctrl-0 = <&cam_actuator_vaf_active>;
 		pinctrl-1 = <&cam_actuator_vaf_suspend>;
 		status = "disabled";
+*/
 	};
 
 	eeprom0: qcom,eeprom@0 {

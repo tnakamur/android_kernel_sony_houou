@@ -29,6 +29,64 @@
 		disabled-pins = <8 9 10 11>;
 	};
 
+	somc_pinctrl: somc_pinctrl {
+		/* If product common default setting is needed,
+		fill pinctrl-1 value in <product>_common.dtsi */
+		pinctrl-1 = <&sdm_gpio_12 &sdm_gpio_13 &sdm_gpio_14 &sdm_gpio_15 &sdm_gpio_20
+			    &sdm_gpio_21 &sdm_gpio_28 &sdm_gpio_29 &sdm_gpio_30 &sdm_gpio_31
+			    &sdm_gpio_34 &sdm_gpio_35 &sdm_gpio_40 &sdm_gpio_41 &sdm_gpio_42 &sdm_gpio_43
+			    &sdm_gpio_44 &sdm_gpio_45 &sdm_gpio_46 &sdm_gpio_47 &sdm_gpio_49
+			    &sdm_gpio_50 &sdm_gpio_51 &sdm_gpio_52 &sdm_gpio_56 &sdm_gpio_60
+			    &sdm_gpio_61 &sdm_gpio_62 &sdm_gpio_63 &sdm_gpio_64 &sdm_gpio_65 &sdm_gpio_66
+			    &sdm_gpio_67 &sdm_gpio_70 &sdm_gpio_72 &sdm_gpio_74 &sdm_gpio_75 &sdm_gpio_79
+			    &sdm_gpio_83 &sdm_gpio_84 &sdm_gpio_85 &sdm_gpio_86 &sdm_gpio_92
+			    &sdm_gpio_93 &sdm_gpio_94 &sdm_gpio_95 &sdm_gpio_97 &sdm_gpio_98
+			    &sdm_gpio_103 &sdm_gpio_104 &sdm_gpio_109 &sdm_gpio_110 &sdm_gpio_113>;
+		/* If variant specific default setting is needed,
+		fill pinctrl-2 value in <variant>.dtsi */
+		pinctrl-2 = <&msm_gpio_75>;
+	};
+
+	int_codec: sound {
+		qcom,msm-micbias1-ext-cap;
+		/delete-property/ qcom,msm-micbias2-ext-cap;
+		qcom,msm-hs-micbias-type = "external";
+		qcom,audio-routing =
+			"RX_BIAS", "INT_MCLK0",
+			"SPK_RX_BIAS", "INT_MCLK0",
+			"INT_LDO_H", "INT_MCLK0",
+			"RX_I2S_CLK", "INT_MCLK0",
+			"TX_I2S_CLK", "INT_MCLK0",
+			"MIC BIAS External", "Handset Mic",
+			"MIC BIAS External2", "Headset Mic",
+			"MIC BIAS External", "Secondary Mic",
+			"AMIC1", "MIC BIAS External",
+			"AMIC2", "MIC BIAS External2",
+			"AMIC3", "MIC BIAS External",
+			"DMIC1", "MIC BIAS External",
+			"MIC BIAS External", "Digital Mic1",
+			"DMIC2", "MIC BIAS External",
+			"MIC BIAS External", "Digital Mic2",
+			"DMIC3", "MIC BIAS External",
+			"MIC BIAS External", "Digital Mic3",
+			"DMIC4", "MIC BIAS External",
+			"MIC BIAS External", "Digital Mic4",
+			"SpkrLeft IN", "SPK1 OUT",
+			"SpkrRight IN", "SPK2 OUT",
+			"PDM_IN_RX1", "PDM_OUT_RX1",
+			"PDM_IN_RX2", "PDM_OUT_RX2",
+			"PDM_IN_RX3", "PDM_OUT_RX3",
+			"ADC1_IN", "ADC1_OUT",
+			"ADC2_IN", "ADC2_OUT",
+			"ADC3_IN", "ADC3_OUT";
+
+		qcom,wsa-max-devs = <2>;
+		qcom,wsa-devs = <&wsa881x_211_en>, <&wsa881x_212_en>,
+				<&wsa881x_213_en>, <&wsa881x_214_en>;
+		qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
+					  "SpkrLeft", "SpkrRight";
+	};
+
 	bu520x1nvx {
 		compatible = "rohm,bu520x1nvx";
 
@@ -41,75 +99,18 @@
 		};
 	};
 
-	sim_detect {
-		sim1_det {
-			label = "sim-detection";
-			gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
-			debounce-interval = <10>;
-		};
-	};
-
 	ldo_vibrator {
 		compatible = "ldo-vibrator";
 		gpios = <&pm660l_gpios 6 1>;
 	};
-
-	qcom,sensor-information {
-		/* msm_therm */
-		sensor_information13: qcom,sensor-information-13 {
-			qcom,scaling-factor = <1000>;
-		};
-
-		/* xo_therm */
-		sensor_information14: qcom,sensor-information-14 {
-			qcom,scaling-factor = <1000>;
-		};
-
-		/* pa_therm0 */
-		sensor_information15: qcom,sensor-information-15 {
-			qcom,scaling-factor = <1000>;
-		};
-
-		/* pa_therm1 */
-		sensor_information16: qcom,sensor-information-16 {
-			qcom,scaling-factor = <1000>;
-		};
-
-		/* quiet_therm */
-		sensor_information17: qcom,sensor-information-17 {
-			qcom,scaling-factor = <1000>;
-			qcom,alias-name = "bl_therm";
-		};
-
-		/* sdm_therm */
-		sensor_information100: qcom,sensor-information-100 {
-			qcom,sensor-type = "adc";
-			qcom,scaling-factor = <1000>;
-			qcom,sensor-name = "sdm_therm";
-		};
-
-		/* emcp_therm */
-		sensor_information101: qcom,sensor-information-101 {
-			qcom,sensor-type = "adc";
-			qcom,scaling-factor = <1000>;
-			qcom,sensor-name = "emcp_therm";
-		};
-
-		/* flash_therm */
-		sensor_information102: qcom,sensor-information-102 {
-			qcom,sensor-type = "adc";
-			qcom,sensor-name = "flash_therm";
-			qcom,scaling-factor = <1000>;
-		};
-
-		/* bms */
-		sensor_information103: qcom,sensor-information-103 {
-			qcom,sensor-type = "adc";
-			qcom,sensor-name = "bms";
-			qcom,scaling-factor = <1000>;
-			qcom,alias-name = "batt_therm";
-		};
-	};
+	led_flash0: qcom,camera-flash@0 {
+        cell-index = <0>;
+        compatible = "qcom,camera-flash";
+        qcom,flash-source = <&pm660l_flash0>;
+   //     qcom,torch-source = <&pm660l_torch0>;
+        qcom,switch-source = <&pm660l_switch0>;
+        status = "ok";
+    };
 
 	/* Disable QC fingerprint sensor */
 	qcom,qbt1000 {
@@ -128,6 +129,7 @@
 		vdd_ana-max-uV  = <3600000>;
 
 		gpio_ldo_enabe = <&pm660l_gpios 3 0x00>;
+
 		pinctrl-names = "fpc1145_reset_reset",
 				"fpc1145_reset_active",
 				"fpc1145_irq_active";
@@ -136,112 +138,89 @@
 		pinctrl-1 = <&fingerprint_reset_active>;
 		pinctrl-2 = <&fingerprint_irq>;
 	};
+	qcom,sensor-information {
+			/* msm_therm */
+			sensor_information13: qcom,sensor-information-13 {
+				qcom,scaling-factor = <1000>;
+			};
 
-	led_flash0: qcom,camera-flash@0 {
-		cell-index = <0>;
-		compatible = "qcom,camera-flash";
-		qcom,flash-source = <&pm660l_flash0>;
-		qcom,torch-source = <&pm660l_torch0>;
-		qcom,switch-source = <&pm660l_switch0>;
-		status = "ok";
+			/* xo_therm */
+			sensor_information14: qcom,sensor-information-14 {
+				qcom,scaling-factor = <1000>;
+			};
+
+			/* pa_therm0 */
+			sensor_information15: qcom,sensor-information-15 {
+				qcom,scaling-factor = <1000>;
+			};
+
+			/* pa_therm1 */
+			sensor_information16: qcom,sensor-information-16 {
+				qcom,scaling-factor = <1000>;
+			};
+
+			/* quiet_therm */
+			sensor_information17: qcom,sensor-information-17 {
+				qcom,scaling-factor = <1000>;
+				qcom,alias-name = "bl_therm";
+			};
+
+			/* sdm_therm */
+			sensor_information100: qcom,sensor-information-100 {
+				qcom,sensor-type = "adc";
+				qcom,scaling-factor = <1000>;
+				qcom,sensor-name = "sdm_therm";
+			};
+
+			/* emcp_therm */
+			sensor_information101: qcom,sensor-information-101 {
+				qcom,sensor-type = "adc";
+				qcom,scaling-factor = <1000>;
+				qcom,sensor-name = "emcp_therm";
+			};
+
+			/* flash_therm */
+			sensor_information102: qcom,sensor-information-102 {
+				qcom,sensor-type = "adc";
+				qcom,sensor-name = "flash_therm";
+				qcom,scaling-factor = <1000>;
+			};
+
+			/* bms */
+			sensor_information103: qcom,sensor-information-103 {
+				qcom,sensor-type = "adc";
+				qcom,sensor-name = "bms";
+				qcom,scaling-factor = <1000>;
+				qcom,alias-name = "batt_therm";
+			};
+		};
+
+	qusb_phy0: qusb@c012000 {
+			qcom,tune2-efuse-correction = <0>;
+			qcom,qusb-phy-init-seq = <0xf8 0x80
+					0xd3 0x84
+					0x83 0x88
+					0xc7 0x8c
+					0x30 0x08
+					0x79 0x0c
+					0x21 0x10
+					0x14 0x9c
+					0x9f 0x1c
+					0x00 0x18>;
 	};
 };
 
-&somc_pinctrl {
-	/* If product common default setting is needed,
-	fill pinctrl-1 value in <product>_common.dtsi */
-	pinctrl-1 = <&sdm_gpio_12 &sdm_gpio_13 &sdm_gpio_14 &sdm_gpio_15 &sdm_gpio_20
-		    &sdm_gpio_21 &sdm_gpio_28 &sdm_gpio_29 &sdm_gpio_30 &sdm_gpio_31
-		    &sdm_gpio_34 &sdm_gpio_35 &sdm_gpio_40 &sdm_gpio_41 &sdm_gpio_42 &sdm_gpio_43
-		    &sdm_gpio_44 &sdm_gpio_45 &sdm_gpio_46 &sdm_gpio_47 &sdm_gpio_49
-		    &sdm_gpio_50 &sdm_gpio_51 &sdm_gpio_52 &sdm_gpio_56 &sdm_gpio_60
-		    &sdm_gpio_61 &sdm_gpio_62 &sdm_gpio_63 &sdm_gpio_64 &sdm_gpio_65 &sdm_gpio_66
-		    &sdm_gpio_67 &sdm_gpio_70 &sdm_gpio_72 &sdm_gpio_74 &sdm_gpio_75 &sdm_gpio_79
-		    &sdm_gpio_83 &sdm_gpio_84 &sdm_gpio_85 &sdm_gpio_86 &sdm_gpio_92
-		    &sdm_gpio_93 &sdm_gpio_94 &sdm_gpio_95 &sdm_gpio_97 &sdm_gpio_98
-		    &sdm_gpio_103 &sdm_gpio_104 &sdm_gpio_109 &sdm_gpio_110 &sdm_gpio_113>;
-};
-
-&int_codec {
-	qcom,msm-micbias1-ext-cap;
-	/delete-property/ qcom,msm-micbias2-ext-cap;
-	qcom,msm-hs-micbias-type = "external";
-	qcom,audio-routing =
-		"RX_BIAS", "INT_MCLK0",
-		"SPK_RX_BIAS", "INT_MCLK0",
-		"INT_LDO_H", "INT_MCLK0",
-		"RX_I2S_CLK", "INT_MCLK0",
-		"TX_I2S_CLK", "INT_MCLK0",
-		"MIC BIAS External", "Handset Mic",
-		"MIC BIAS External2", "Headset Mic",
-		"MIC BIAS External", "Secondary Mic",
-		"AMIC1", "MIC BIAS External",
-		"AMIC2", "MIC BIAS External2",
-		"AMIC3", "MIC BIAS External",
-		"DMIC1", "MIC BIAS External",
-		"MIC BIAS External", "Digital Mic1",
-		"DMIC2", "MIC BIAS External",
-		"MIC BIAS External", "Digital Mic2",
-		"DMIC3", "MIC BIAS External",
-		"MIC BIAS External", "Digital Mic3",
-		"DMIC4", "MIC BIAS External",
-		"MIC BIAS External", "Digital Mic4",
-		"SpkrLeft IN", "SPK1 OUT",
-		"SpkrRight IN", "SPK2 OUT",
-		"PDM_IN_RX1", "PDM_OUT_RX1",
-		"PDM_IN_RX2", "PDM_OUT_RX2",
-		"PDM_IN_RX3", "PDM_OUT_RX3",
-		"ADC1_IN", "ADC1_OUT",
-		"ADC2_IN", "ADC2_OUT",
-		"ADC3_IN", "ADC3_OUT";
-
-	qcom,wsa-max-devs = <2>;
-	qcom,wsa-devs = <&wsa881x_211_en>, <&wsa881x_212_en>,
-			<&wsa881x_213_en>, <&wsa881x_214_en>;
-	qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
-				  "SpkrLeft", "SpkrRight";
-};
-
-&qusb_phy0 {
-	qcom,tune2-efuse-correction = <0>;
-	qcom,qusb-phy-init-seq = <0xf8 0x80
-			0xd3 0x84
-			0x83 0x88
-			0xc7 0x8c
-			0x03 0x90
-			0x30 0x08
-			0x79 0x0c
-			0x21 0x10
-			0x14 0x9c
-			0x9f 0x1c
-			0x00 0x18>;
-};
-
-&pm660_gpios {
-	/* GPIO_2: FLASH_THERM */
-	gpio@c100 {
-		status = "ok";
-		qcom,master-en = <0>;		/* Disable */
-	};
-
-	gpio@c300 {
-		qcom,mode = <0>;
-		qcom,vin-sel = <1>;
-		qcom,src-sel = <0>;
-		qcom,master-en = <1>;
-		status = "okay";
-	};
-};
-
-&pm660l_gpios {
-        gpio@c200 { /* GPIO3 - Fingerprint SENSOR LDO enable*/
-                qcom,mode = <1>;                /* Output */
-                qcom,pull = <5>;                /* No Pull */
-                qcom,vin-sel = <0>;             /* VIN1 GPIO_LV */
-                qcom,src-sel = <0>;             /* GPIO */
-                qcom,master-en = <1>;           /* Enable GPIO */
-                status = "ok";
-        };
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_default_panel>;
+	pinctrl-names = "mdss_default", "mdss_sleep",  "mdss_touch_active", "mdss_touch_suspend";
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
+	pinctrl-2 = <&mdss_touch_active>;
+	pinctrl-3 = <&mdss_touch_suspend>;
+	qcom,platform-te-gpio = <&tlmm 59 0>;
+	qcom,platform-reset-gpio = <&tlmm 53 0>;
+	qcom,platform-touch-reset-gpio = <&tlmm 66 0>;
+/*	qcom,platform-touch-int-gpio = <&tlmm 45 0>; */
 };
 
 &pm660l_wled {
@@ -251,32 +230,33 @@
 
 &red_led {
 	somc,color_variation_max_num = <5>;
+	/* color code, single color, mixed color */
 	somc,max_current = <
-		83 374 298
-		84 106 104
-		85 126 114
-		86 106 104
-		87 126 114>;
+		83 305 179
+		84 69 72
+		85 93 85
+		86 69 72
+		87 93 85>;
 };
 
 &green_led {
 	somc,color_variation_max_num = <5>;
 	somc,max_current = <
-		83 398 488
-		84 146 264
-		85 180 286
-		86 146 264
-		87 180 286>;
+		83 381 448
+		84 142 291
+		85 188 353
+		86 142 291
+		87 188 353>;
 };
 
 &blue_led {
 	somc,color_variation_max_num = <5>;
 	somc,max_current = <
-		83 510 246
-		84 272 90
-		85 406 106
-		86 272 90
-		87 406 106>;
+		83 510 159
+		84 339 97
+		85 450 127
+		86 339 97
+		87 450 127>;
 };
 
 &pm660l_gpios {
@@ -290,6 +270,54 @@
 		qcom,invert = <0>;		/* Low */
 		qcom,master-en = <1>;		/* Enable */
 		status = "okay";
+	};
+};
+&pm660_vadc {
+	chan@4c { /* XO_THERM */
+		qcom,scale-function = <18>;
+	};
+
+	chan@4d { /* Rename from msm_therm */
+		label = "sdm_therm";
+		qcom,scale-function = <17>;
+		qcom,vadc-thermal-node;
+	};
+
+	chan@4e { /* Rename from emmc_therm */
+		label = "emcp_therm";
+		qcom,scale-function = <17>;
+	};
+
+	chan@4f { /* pa_therm0 */
+		qcom,scale-function = <17>;
+	};
+
+	chan@50 {
+		label = "pa_therm1";
+		reg = <0x50>;
+		qcom,decimation = <2>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <17>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,vadc-thermal-node;
+	};
+
+	chan@51 { /* quiet_therm */
+		qcom,scale-function = <17>;
+	};
+
+	chan@52 {
+		label = "flash_therm";
+		reg = <0x52>;
+		qcom,decimation = <2>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <17>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,vadc-thermal-node;
 	};
 };
 
@@ -584,7 +612,6 @@
 			pins = "gpio45";
 			function = "gpio";
 		};
-
 		config {
 			pins = "gpio45";
 			drive-strength = <2>;
@@ -597,7 +624,6 @@
 			pins = "gpio45";
 			function = "gpio";
 		};
-
 		config {
 			pins = "gpio45";
 			drive-strength = <2>;
@@ -634,6 +660,22 @@
 			output-low;
 		};
 	};
+
+	/* GPIO_75 : ACC_COVER_OPEN */
+	msm_gpio_75: msm_gpio_75 {
+		mux {
+			pins = "gpio75";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio75";
+			drive-strength = <2>;
+			bias-disable;
+			input-enable;
+		};
+	};
+
 
 	/* GPIO_49: NC */
 	sdm_gpio_49: sdm_gpio_49 {
@@ -785,7 +827,73 @@
 		};
 	};
 
-	/* GPIO_65: NC */
+};
+&pm660_gpios{
+	/*GPIO_2:FLASH_THERM*/
+	gpio@c100{
+		status="ok";
+		qcom,master-en = <0>; /* Disable*/
+	};
+};
+
+&pm660l_gpios {
+        gpio@c200 { /* GPIO3 - Fingerprint SENSOR LDO enable*/
+                qcom,mode = <1>;                /* Output */
+                qcom,pull = <5>;                /* No Pull */
+                qcom,vin-sel = <0>;             /* VIN1 GPIO_LV */
+                qcom,src-sel = <0>;             /* GPIO */
+                qcom,master-en = <1>;           /* Enable GPIO */
+                status = "ok";
+        };
+};
+
+&tlmm {
+	/* GPIO_20 : FP_RESET_N */
+	fingerprint_reset_reset: fingerprint_reset_reset {
+		mux {
+			pins = "gpio20";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio20";
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+	};
+
+	/* GPIO_20 : FP_RESET_N, state device active */
+	fingerprint_reset_active: fingerprint_reset_active {
+		mux {
+			pins = "gpio20";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio20";
+			drive-strength = <2>;
+			bias-disable;
+			output-high;
+		};
+	};
+
+	/* GPIO_61 : USB_DETECT_EN */
+	 sdm_gpio_61: sdm_gpio_61 {
+		mux {
+			pins = "gpio61";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio61";
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+	};
+
+		/* GPIO_65: NC */
 	sdm_gpio_65: sdm_gpio_65 {
 		mux {
 			pins = "gpio65";
@@ -1174,6 +1282,21 @@
 			input-enable;
 		};
 	};
+
+	/* GPIO_72 : FP_INT_N */
+	fingerprint_irq: fingerprint_irq {
+		mux {
+			pins = "gpio72";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio72";
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
 };
 
 &cci {
@@ -1374,6 +1497,10 @@
 	};
 };
 
+&mdss_dsi0_pll {
+	/delete-property/ qcom,dsi-pll-ssc-en;
+};
+
 &pm660_vadc {
 	chan@19 { /* USB_DETECT_ADC */
 		label = "usb_detect";
@@ -1385,53 +1512,6 @@
 		qcom,hw-settle-time = <5>;
 		qcom,fast-avg-setup = <0>;
 	};
-
-	chan@4c { /* XO_THERM */
-		qcom,scale-function = <18>;
-	};
-
-	chan@4d { /* Rename from msm_therm */
-		label = "sdm_therm";
-		qcom,scale-function = <17>;
-		qcom,vadc-thermal-node;
-	};
-
-	chan@4e { /* Rename from emmc_therm */
-		label = "emcp_therm";
-		qcom,scale-function = <17>;
-	};
-
-	chan@4f { /* pa_therm0 */
-		qcom,scale-function = <17>;
-	};
-
-	chan@50 {
-		label = "pa_therm1";
-		reg = <0x50>;
-		qcom,decimation = <2>;
-		qcom,pre-div-channel-scaling = <0>;
-		qcom,calibration-type = "ratiometric";
-		qcom,scale-function = <17>;
-		qcom,hw-settle-time = <2>;
-		qcom,fast-avg-setup = <0>;
-		qcom,vadc-thermal-node;
-	};
-
-	chan@51 { /* quiet_therm */
-		qcom,scale-function = <17>;
-	};
-
-	chan@52 {
-		label = "flash_therm";
-		reg = <0x52>;
-		qcom,decimation = <2>;
-		qcom,pre-div-channel-scaling = <0>;
-		qcom,calibration-type = "ratiometric";
-		qcom,scale-function = <17>;
-		qcom,hw-settle-time = <2>;
-		qcom,fast-avg-setup = <0>;
-		qcom,vadc-thermal-node;
-	};
 };
 
 &usb3 {
@@ -1440,15 +1520,8 @@
 	id_polling_up_period = <0>;
 	id_polling_pd_gpio = <&tlmm 61 0>;
 	qcom,usb_detect-vadc = <&pm660_vadc>;
-	dwc3@a800000 {
-		maximum-speed = "high-speed";
-	};
 };
 
 &sdhc_2 {
 	cd-gpios = <&tlmm 54 GPIO_ACTIVE_HIGH>;
-};
-
-&mdss_dsi0_pll {
-	/delete-property/ qcom,dsi-pll-ssc-en;
 };

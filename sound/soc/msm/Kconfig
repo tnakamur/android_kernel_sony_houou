@@ -280,7 +280,4 @@ config SND_SOC_660
 	 the machine driver and the corresponding
 	 DAI-links
 
-config MICBIAS2_NO_EXT_BYP_CAP
-	bool "To remove Property msm-micbias2-ext-cap"
-
 endmenu

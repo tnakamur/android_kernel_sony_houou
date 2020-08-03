@@ -102,9 +102,6 @@
 #define PFM_CURRENT_SHIFT		2
 
 #define LCDB_PWRUP_PWRDN_CTL_REG	0x66
-#define LCDB_PWRUP_PWRDN_CTL_DLY1_MASK	GENMASK(3, 2)
-#define LCDB_PWRUP_PWRDN_CTL_DLY1_SHIFT	2
-#define LCDB_PWRUP_PWRDN_CTL_DLY2_MASK	GENMASK(1, 0)
 
 /* LDO */
 #define LCDB_LDO_OUTPUT_VOLTAGE_REG	0x71
@@ -297,20 +294,6 @@ static u32 ncp_ilim_ma[] = {
 	460,
 	640,
 	810,
-};
-
-static const int lcdb_pwrup_dly_table[] = {
-	0,
-	1000,
-	4000,
-	8000,
-};
-
-static const int lcdb_pwrdn_dly_table[] = {
-	0,
-	1000,
-	4000,
-	8000,
 };
 
 #define SETTING(_id, _sec_access)		\
@@ -789,13 +772,6 @@ static int qpnp_lcdb_handle_sc_event(struct qpnp_lcdb *lcdb)
 		pr_err("SC trigged %d times, disabling LCDB forever!\n",
 						lcdb->sc_count);
 		lcdb->lcdb_sc_disable = true;
-
-		pr_err("SC trigger to execute shutdown...\n");
-		/* shutdown */
-		do {
-			pm_power_off();
-			msleep(500);
-		} while (1);
 		goto unlock_mutex;
 	}
 	lcdb->sc_count++;
@@ -1752,72 +1728,6 @@ static int qpnp_lcdb_init_bst(struct qpnp_lcdb *lcdb)
 	return 0;
 }
 
-static int qpnp_lcdb_init_pwrup_pwrdn_delay(struct qpnp_lcdb *lcdb)
-{
-	int rc = 0;
-	u32 i = 0, tmp = 0;
-	u8 val = 0;
-	struct device_node *node = lcdb->dev->of_node;
-
-	pr_info("Start\n");
-
-	val = 0x03;
-	pr_debug("Set pwrdn-delay with default val=0x%x\n", val);
-
-	rc = of_property_read_u32(node,
-		"qcom,qpnp-lcdb-pwrdn-udelay", &tmp);
-	if (!rc) {
-		if (tmp >= 0) {
-			for (i = 0; i < ARRAY_SIZE(lcdb_pwrdn_dly_table); i++) {
-				if (lcdb_pwrdn_dly_table[i] == tmp)
-					break;
-			}
-
-			if (i == ARRAY_SIZE(lcdb_pwrdn_dly_table)) {
-				pr_err("Invalid value in qcom,qpnp-lcdb-pwrdn-udelay\n");
-			} else {
-				val = i;
-				pr_debug("Set pwrdn-delay with dts val=0x%x\n", val);
-			}
-		}
-	}
-
-	val |= 0x0c;
-	pr_debug("Set pwrup-delay with default val=0x%x\n", val);
-
-	rc = of_property_read_u32(node,
-			"qcom,qpnp-lcdb-pwrup-udelay", &tmp);
-	if (!rc) {
-		if (tmp >= 0) {
-			for (i = 0; i < ARRAY_SIZE(lcdb_pwrup_dly_table); i++) {
-				if (lcdb_pwrup_dly_table[i] == tmp)
-					break;
-			}
-
-			if (i == ARRAY_SIZE(lcdb_pwrup_dly_table)) {
-				pr_err("Invalid value in qcom,qpnp-lcdb-pwrup-udelay\n");
-			} else {
-				val &= 0xf3;
-				val |= (i << LCDB_PWRUP_PWRDN_CTL_DLY1_SHIFT);
-				pr_debug("Set pwrup-delay with dts val=0x%x\n", val);
-			}
-		}
-	}
-
-	rc = qpnp_lcdb_secure_write(lcdb, lcdb->base + LCDB_PWRUP_PWRDN_CTL_REG,
-							val);
-	if (rc < 0) {
-		pr_err("qpnp_lcdb_secure_write register %x failed rc = %d\n",
-			LCDB_PWRUP_PWRDN_CTL_REG, rc);
-		return rc;
-	}
-
-	pr_info("Set LCDB_PWRUP_PWRDN_CTL_REG(0x%x) register val=0x%x rc=%d\n",
-		LCDB_PWRUP_PWRDN_CTL_REG, val, rc);
-
-	return rc;
-}
-
 static void qpnp_lcdb_pmic_config(struct qpnp_lcdb *lcdb)
 {
 	switch (lcdb->pmic_rev_id->pmic_subtype) {
@@ -1854,12 +1764,6 @@ static int qpnp_lcdb_hw_init(struct qpnp_lcdb *lcdb)
 	rc = qpnp_lcdb_init_ncp(lcdb);
 	if (rc < 0) {
 		pr_err("Failed to initialize NCP rc=%d\n", rc);
-		return rc;
-	}
-
-	rc = qpnp_lcdb_init_pwrup_pwrdn_delay(lcdb);
-	if (rc < 0) {
-		pr_err("Failed to initialize pwrup pwrdn delay rc=%d\n", rc);
 		return rc;
 	}
 

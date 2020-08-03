@@ -342,7 +342,7 @@ int incell_control_mode(incell_intf_mode mode, bool force)
 	pr_notice("%s: START - %s:%s\n", __func__,
 		((mode == INCELL_DISPLAY_HW_RESET) ? "INCELL_DISPLAY_HW_RESET" :
 		((mode == INCELL_DISPLAY_OFF) ? "INCELL_DISPLAY_OFF" :
-		((mode == INCELL_TOUCH_RESET) ? "INCELL_TOUCH_RESET" : "UNKNOWN"))),
+						"INCELL_DISPLAY_ON")),
 		((force) ? "force" : "unforce"));
 
 	if (!incell) {
@@ -442,9 +442,6 @@ int incell_control_mode(incell_intf_mode mode, bool force)
 	case INCELL_DISPLAY_OFF:
 		spec_mfd->off_sts = true;
 		ret = incell_display_off(incell, info);
-		break;
-	case INCELL_TOUCH_RESET:
-		ret = mdss_dsi_panel_driver_reset_touch_ctrl(pdata, force);
 		break;
 	default:
 		pr_err("%s: Invalid mode for touch interface %d\n",

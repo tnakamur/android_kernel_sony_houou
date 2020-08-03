@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2017, 2019 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -8,6 +8,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+/*
+ * NOTE: This file has been modified by Sony Mobile Communications Inc.
+ * Modifications are Copyright (c) 2019 Sony Mobile Communications Inc,
+ * and licensed under the license of the file.
  */
 
 #ifndef __MSM_CPP_H__
@@ -293,6 +298,7 @@ struct cpp_device {
 	struct msm_cpp_vbif_data *vbif_data;
 	bool turbo_vote;
 	struct cx_ipeak_client *cpp_cx_ipeak;
+	int cx_ipeak_bit;
 	enum cpp_iommu_fault_state fault_status;
 };
 

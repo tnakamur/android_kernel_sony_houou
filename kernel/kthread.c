@@ -322,6 +322,10 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
 		va_list args;
 
 		va_start(args, namefmt);
+		/*
+		 * task is already visible to other tasks, so updating
+		 * COMM must be protected.
+		 */
 		vsnprintf(name, sizeof(name), namefmt, args);
 		set_task_comm(task, name);
 		va_end(args);

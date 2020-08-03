@@ -87,7 +87,7 @@ qcom,send_2647mah {
 		 00 00 00 00
 		 00 00 00 00
 	];
-	somc,step-cfg = <
+    somc,step-cfg = <
 		(-2550) 50    0 4500    0 4340 1
 		   50  100    0 4500  800 4340 2
 		  100  450    0 4250 2025 4340 3
@@ -95,6 +95,6 @@ qcom,send_2647mah {
 		  100  450 4300 4500  800 4340 3
 		  450  550    0 4500  800 4200 4
 		  550 2550    0 4500    0 4200 5
-	>;
-	somc,step-cell-impedance-mohm = <25>;
+>;
+    somc,step-cell-impedance-mohm = <25>;
 };

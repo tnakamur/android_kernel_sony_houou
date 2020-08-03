@@ -126,15 +126,6 @@ config MACH_SONY_HOUOU
     If you enable this config,
     please use SONY Mobile device tree.
 
-config MACH_SONY_HOUOU_ROLA
-    bool "Sony Mobile Houou Rola"
-    depends on ARCH_SONY_GANGES
-    help
-    Support for the SONY Mobile Houou Rola device
-    which is based on SONY Ganges platform.
-    If you enable this config,
-    please use SONY Mobile device tree.
-
 config ARCH_ROCKCHIP
 	bool "Rockchip Platforms"
 	select ARCH_HAS_RESET_CONTROLLER

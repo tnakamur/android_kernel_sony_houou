@@ -1440,7 +1440,6 @@ correct_plug_type:
 			if (!skip_check_cross_conn) {
 				ret = wcd_check_cross_conn(mbhc);
 			}
-
 			if (ret == cross_conn && ret == 0) {
 				skip_check_cross_conn = true;
 				pr_debug("%s: the same check result for cross conn; \

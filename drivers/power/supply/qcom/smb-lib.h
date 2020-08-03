@@ -368,9 +368,6 @@ struct smb_charger {
 	struct delayed_work	ps_change_timeout_work;
 	struct delayed_work	clear_hdc_work;
 	struct work_struct	otg_oc_work;
-#if defined(CONFIG_SOMC_CHARGER_EXTENSION)
-	struct work_struct	ocp_otg_wa_work;
-#endif
 	struct work_struct	vconn_oc_work;
 	struct delayed_work	otg_ss_done_work;
 	struct delayed_work	icl_change_work;

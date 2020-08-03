@@ -218,6 +218,9 @@ static u32 panel_cmd_read(struct mdss_dsi_ctrl_pdata *ctrl,
 	cmdreq.rbuf = rbuf;
 	cmdreq.cb = fxn; /* call back */
 
+	if (pinfo->mipi.mode == DSI_VIDEO_MODE)
+		cmdreq.flags |= CMD_REQ_HS_MODE;
+
 	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_ON);
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_OFF);
@@ -924,16 +927,28 @@ static ssize_t mdss_dsi_panel_vsyncs_per_ksecs_show(struct device *dev,
 		"Please read again after writing ON.\n");
 }
 
-static ssize_t mdss_dsi_panel_fps_mode_store(struct device *dev,
+static ssize_t mdss_dsi_panel_change_fpks_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	return mdss_dsi_panel_driver_fps_mode_store(dev, attr, buf, count);
+	return mdss_dsi_panel_driver_change_fpks_store(dev, attr, buf, count);
 }
 
-static ssize_t mdss_dsi_panel_fps_mode_show(struct device *dev,
+static ssize_t mdss_dsi_panel_change_fpks_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	return mdss_dsi_panel_driver_fps_mode_show(dev, attr, buf);
+	return mdss_dsi_panel_driver_change_fpks_show(dev, attr, buf);
+}
+
+static ssize_t mdss_dsi_panel_change_fps_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	return mdss_dsi_panel_driver_change_fps_store(dev, attr, buf, count);
+}
+
+static ssize_t mdss_dsi_panel_change_fps_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return mdss_dsi_panel_driver_change_fps_show(dev, attr, buf);
 }
 
 static ssize_t mdss_dsi_panel_esd_enable_show(struct device *dev,
@@ -984,9 +999,12 @@ static struct device_attribute panel_attributes[] = {
 	__ATTR(vsyncs_per_ksecs, S_IRUSR|S_IRGRP|S_IWUSR|S_IWGRP,
 		mdss_dsi_panel_vsyncs_per_ksecs_show,
 		mdss_dsi_panel_vsyncs_per_ksecs_store),
-	__ATTR(fps_mode, S_IRUGO|S_IWUSR|S_IWGRP,
-		mdss_dsi_panel_fps_mode_show,
-		mdss_dsi_panel_fps_mode_store),
+	__ATTR(change_fps, S_IRUGO|S_IWUSR|S_IWGRP,
+					mdss_dsi_panel_change_fps_show,
+					mdss_dsi_panel_change_fps_store),
+	__ATTR(change_fpks, S_IRUGO|S_IWUSR|S_IWGRP,
+					mdss_dsi_panel_change_fpks_show,
+					mdss_dsi_panel_change_fpks_store),
 	__ATTR(esd_enable_wo_xlog, S_IRUSR|S_IRGRP|S_IWUSR|S_IWGRP,
 		mdss_dsi_panel_esd_enable_show,
 		mdss_dsi_panel_esd_enable_store),

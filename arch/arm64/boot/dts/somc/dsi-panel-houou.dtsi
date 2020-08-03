@@ -19,7 +19,8 @@
 
 &mdss_mdp {
 	/* JDI ID4 */
-	dsi_4: somc,4_panel {
+	/* dsi_4: somc,4_panel { */
+	dsi_4: qcom,mdss_dsi_td4362_jdi_fhdplus_cmd{
 		qcom,mdss-dsi-panel-name = "4";
 		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
 		qcom,mdss-dsi-panel-width = <1080>;
@@ -152,7 +153,8 @@
 	};
 
 	/* AUO ID8 */
-	dsi_8: somc,8_panel {
+	/* dsi_8: somc,8_panel { */
+	dsi_8: qcom,mdss_dsi_td4362_auo_fhdplus_cmd {
 		qcom,mdss-dsi-panel-name = "8";
 		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
 		qcom,mdss-dsi-panel-width = <1080>;
@@ -415,3 +417,4 @@
 
 #include "dsi-panel-houou-id4_pcc.dtsi"
 #include "dsi-panel-houou-id8_pcc.dtsi"
+

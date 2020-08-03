@@ -11,7 +11,7 @@
  */
 /*
  * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2018 Sony Mobile Communications Inc,
+ * Modifications are Copyright (c) 2020 Sony Mobile Communications Inc,
  * and licensed under the license of the file.
  */
 
@@ -899,6 +899,7 @@ static void swrm_apply_port_config(struct swr_master *master)
 	dev_dbg(swrm->dev, "%s: enter bank: %d master_ports: %d\n",
 		__func__, bank, master->num_port);
 
+
 	swrm_copy_data_port_config(master, bank);
 }
 
@@ -1295,6 +1296,7 @@ static int swrm_get_logical_dev_num(struct swr_master *mstr, u64 dev_id,
 	u64 id = 0;
 	int ret = -EINVAL;
 	struct swr_mstr_ctrl *swrm = swr_get_ctrl_data(mstr);
+	struct swr_device *swr_dev;
 
 	if (!swrm) {
 		pr_err("%s: Invalid handle to swr controller\n",
@@ -1308,20 +1310,28 @@ static int swrm_get_logical_dev_num(struct swr_master *mstr, u64 dev_id,
 			    SWRM_ENUMERATOR_SLAVE_DEV_ID_2(i))) << 32);
 		id |= swrm->read(swrm->handle,
 			    SWRM_ENUMERATOR_SLAVE_DEV_ID_1(i));
-		if ((id & SWR_DEV_ID_MASK) == dev_id) {
-			if (swrm_get_device_status(swrm, i) == 0x01) {
-				*dev_num = i;
-				ret = 0;
-			} else {
-				dev_err(swrm->dev, "%s: device is not ready\n",
-					 __func__);
+		/* As pm_runtime_get_sync() brings all slaves out of reset
+		 * update logical device number for all salves
+		 */
+		list_for_each_entry(swr_dev, &mstr->devices, dev_list) {
+			if (swr_dev->addr == (id & SWR_DEV_ID_MASK)) {
+				u32 status = swrm_get_device_status(swrm, i);
+				if ((status == 0x01) || (status == 0x02)) {
+					swr_dev->dev_num = i;
+					if ((id & SWR_DEV_ID_MASK) == dev_id) {
+						*dev_num = i;
+						ret = 0;
+					}
+					dev_dbg(swrm->dev, "%s: devnum %d is assigned for dev addr %lx\n",
+						__func__, i, swr_dev->addr);
+				}
 			}
-			goto found;
 		}
 	}
-	dev_err(swrm->dev, "%s: device id 0x%llx does not match with 0x%llx\n",
-		__func__, id, dev_id);
-found:
+	if (!ret) {
+		dev_err(swrm->dev, "%s: device 0x%llx is not ready\n",
+			__func__, dev_id);
+	}
 	pm_runtime_mark_last_busy(&swrm->pdev->dev);
 	pm_runtime_put_autosuspend(&swrm->pdev->dev);
 	return ret;

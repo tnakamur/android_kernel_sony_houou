@@ -1,8 +1,3 @@
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2019 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 #include <linux/slab.h>
 #include <linux/kernel.h>
 #include <linux/bitops.h>

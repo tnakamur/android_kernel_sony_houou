@@ -3,11 +3,6 @@
  * scripts/mod/file2alias.c.  You must keep that file in sync with this
  * header.
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2017 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #ifndef LINUX_MOD_DEVICETABLE_H
 #define LINUX_MOD_DEVICETABLE_H
@@ -679,6 +674,18 @@ struct mcb_device_id {
 struct ulpi_device_id {
 	__u16 vendor;
 	__u16 product;
+	kernel_ulong_t driver_data;
+};
+
+#define MHI_NAME_SIZE 32
+
+/**
+ * struct mhi_device_id - MHI device identification
+ * @chan: MHI channel name
+ * @driver_data: driver data
+ */
+struct mhi_device_id {
+	const char chan[MHI_NAME_SIZE];
 	kernel_ulong_t driver_data;
 };
 

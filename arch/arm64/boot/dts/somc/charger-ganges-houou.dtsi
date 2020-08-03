@@ -16,17 +16,10 @@
  * it under the terms of the GNU General Public License version 2, as
  * published by the Free Software Foundation.
  */
-/*
- * Copyright (C) 2018 Sony Mobile Communications Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2, as
- * published by the Free Software Foundation.
- */
 
-&soc {
+/ {
 	houou_batterydata: qcom,battery-data {
-		qcom,batt-id-range-pct = <17>;
+		qcom,batt-id-range-pct = <91>;
 		#include "fg-gen3-batterydata-houou-send-4245mv-2425mah.dtsi"
 		#include "fg-gen3-batterydata-houou-send-4297mv-2539mah.dtsi"
 		#include "fg-gen3-batterydata-houou-send-4335mv-2647mah.dtsi"
@@ -51,7 +44,7 @@
 					1000000 1000000 1000000
 					1000000 600000 500000
 					200000 100000 0>;
-	somc,fake-charging-temp-level = <13>;
+    somc,fake-charging-temp-level = <13>;
 	somc,product-icl-ua = <2000000>;
 	somc,high-voltage-icl-ua = <1700000>;
 	qcom,hvdcp-disable;
@@ -65,7 +58,7 @@
 };
 
 &pm660_fg {
-	qcom,battery-data = <&houou_batterydata>;
+    qcom,battery-data = <&houou_batterydata>;
 	qcom,fg-sys-term-current = <(-160)>;
 	qcom,fg-chg-term-current = <135>;
 	somc,jeita-step-use-real-temp;

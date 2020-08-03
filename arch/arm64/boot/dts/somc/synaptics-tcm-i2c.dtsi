@@ -63,3 +63,4 @@
 		synaptics,ubl-i2c-addr = <0x2c>;
 	};
 };
+

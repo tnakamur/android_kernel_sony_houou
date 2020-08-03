@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -421,6 +421,12 @@ enum msm_isp_comp_irq_types {
 
 #define MSM_VFE_REQUESTQ_SIZE 8
 
+struct msm_isp_pending_buf_info {
+	uint32_t is_buf_done_pending;
+	struct msm_isp_buffer *buf;
+	uint32_t frame_id;
+};
+
 struct msm_vfe_axi_stream {
 	uint32_t frame_id;
 	enum msm_vfe_axi_state state;
@@ -477,6 +483,7 @@ struct msm_vfe_axi_stream {
 	uint32_t vfe_mask;
 	uint32_t composite_irq[MSM_ISP_COMP_IRQ_MAX];
 	int lpm_mode;
+	struct msm_isp_pending_buf_info pending_buf_info;
 };
 
 struct msm_vfe_axi_composite_info {
@@ -491,6 +498,11 @@ enum msm_vfe_camif_state {
 
 struct msm_vfe_src_info {
 	uint32_t frame_id;
+#if defined(CONFIG_MACH_SONY_MERMAID) \
+       || defined(CONFIG_MACH_SONY_MERMAID_DSDS) \
+       || defined(CONFIG_MACH_SONY_HOUOU)
+	uint32_t request_frame_id;
+#endif
 	uint32_t reg_update_frame_id;
 	uint8_t active;
 	uint8_t stream_count;
@@ -767,11 +779,6 @@ struct msm_vfe_common_subdev {
 	struct msm_vfe_common_dev_data *common_data;
 };
 
-struct isp_proc {
-	uint32_t  kernel_sofid;
-	uint32_t  vfeid;
-};
-
 struct vfe_device {
 	/* Driver private data */
 	struct platform_device *pdev;
@@ -801,6 +808,7 @@ struct vfe_device {
 	enum cam_ahb_clk_vote ahb_vote;
 	enum cam_ahb_clk_vote user_requested_ahb_vote;
 	struct cx_ipeak_client *vfe_cx_ipeak;
+	int cx_ipeak_bit;
 
 	/* Sync variables*/
 	struct completion reset_complete;
@@ -856,7 +864,10 @@ struct vfe_device {
 	uint32_t recovery_irq1_mask;
 	/* total bandwidth per vfe */
 	uint64_t total_bandwidth;
-	struct isp_proc *isp_page;
+	struct isp_kstate *isp_page;
+
+	/* irq info */
+	uint32_t irq_sof_id;
 };
 
 struct vfe_parent_device {

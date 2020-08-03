@@ -701,7 +701,6 @@ int __secure_computing(const struct seccomp_data *sd)
 		BUG();
 	}
 }
-
 #endif /* CONFIG_HAVE_ARCH_SECCOMP_FILTER */
 
 long prctl_get_seccomp(void)

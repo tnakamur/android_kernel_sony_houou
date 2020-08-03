@@ -2984,9 +2984,6 @@ static int qpnp_wled_probe(struct platform_device *pdev)
 	if (wled->init_br_ua)
 		qpnp_wled_set_init_br(wled);
 
-	if (wled->init_br_ua)
-		qpnp_wled_set_init_br(wled);
-
 	return 0;
 
 sysfs_fail:

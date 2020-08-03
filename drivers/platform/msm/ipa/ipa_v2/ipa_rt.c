@@ -1404,6 +1404,7 @@ int ipa2_reset_rt(enum ipa_ip_type ip, bool user_only)
 					hdr_entry->cookie != IPA_HDR_COOKIE) {
 						IPAERR_RL(
 						"Header already deleted\n");
+						mutex_unlock(&ipa_ctx->lock);
 						return -EINVAL;
 					}
 				} else if (rule->proc_ctx) {
@@ -1415,6 +1416,7 @@ int ipa2_reset_rt(enum ipa_ip_type ip, bool user_only)
 							IPA_PROC_HDR_COOKIE) {
 					IPAERR_RL(
 						"Proc entry already deleted\n");
+						mutex_unlock(&ipa_ctx->lock);
 						return -EINVAL;
 					}
 				}
@@ -1601,6 +1603,11 @@ static int __ipa_mdfy_rt_rule(struct ipa_rt_rule_mdfy *rtrule)
 	if (entry->cookie != IPA_RT_RULE_COOKIE) {
 		IPAERR_RL("bad params\n");
 		goto error;
+	}
+
+	if (!strcmp(entry->tbl->name, IPA_DFLT_RT_TBL_NAME)) {
+		IPAERR_RL("Default tbl rule cannot be modified\n");
+		return -EINVAL;
 	}
 
 	/* Adding check to confirm still
